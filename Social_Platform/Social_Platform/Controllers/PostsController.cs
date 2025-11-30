@@ -17,8 +17,6 @@ namespace Social_Platform.Controllers
         public IActionResult Index()
         {
             var posts = _db.Posts
-                             .Include(p => p.Comments)
-                             .Include(p => p.Reactions)
                              .OrderByDescending(p => p.Date);
 
             // ViewBag.OriceDenumireSugestiva

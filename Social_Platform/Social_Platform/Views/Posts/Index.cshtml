@@ -25,6 +25,16 @@
             </button>
         </form>
 
+        <form asp-action="New" asp-controller="Posts" method="post">
+            <input type="hidden" name="Id" value="@post.Id" />
+            <button type="submit">
+                👍
+            </button>
+        </form>
+
+        <a asp-controller="Comments" asp-action="Index" asp-route-id="@post.Id">
+            Comments @* @ Redirect to the comms of the post *@
+        </a>
     </div>
 
     <br />

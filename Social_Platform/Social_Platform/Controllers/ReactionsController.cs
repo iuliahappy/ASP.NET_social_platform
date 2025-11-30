@@ -12,7 +12,7 @@ namespace Social_Platform.Controllers
             _db = context;
         }
 
-        public IActionResult Index()
+        public IActionResult React()
         {
             return View();
         }
