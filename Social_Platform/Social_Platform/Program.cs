@@ -1,7 +1,16 @@
+using Microsoft.EntityFrameworkCore;
+using Social_Platform.Models;
+
 var builder = WebApplication.CreateBuilder(args);
 
 // Add services to the container.
 builder.Services.AddControllersWithViews();
+
+//@ Adding the service which does the connection with the DB
+var connectionstring = builder.Configuration.GetConnectionString("DefaultConnection");
+
+builder.Services.AddDbContext<AppDbContext>(
+    option => option.UseSqlServer(connectionstring)); //lambda function
 
 var app = builder.Build();
 
