@@ -1,6 +1,7 @@
 ﻿using Microsoft.EntityFrameworkCore;
+using Social_Platform.Models;
 
-namespace Social_Platform.Models
+namespace Social_Platform.Data
 {
     public class AppDbContext : DbContext
     {

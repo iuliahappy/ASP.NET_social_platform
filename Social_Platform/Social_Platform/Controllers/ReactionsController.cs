@@ -1,5 +1,5 @@
 ﻿using Microsoft.AspNetCore.Mvc;
-using Social_Platform.Models;
+using Social_Platform.Data;
 
 namespace Social_Platform.Controllers
 {

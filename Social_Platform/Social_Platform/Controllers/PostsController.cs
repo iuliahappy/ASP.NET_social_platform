@@ -1,6 +1,7 @@
 ﻿using Microsoft.AspNetCore.Mvc;
 using Social_Platform.Models;
 using Microsoft.EntityFrameworkCore;
+using Social_Platform.Data;
 
 namespace Social_Platform.Controllers
 {
