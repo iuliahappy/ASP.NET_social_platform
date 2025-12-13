@@ -1,0 +1,22 @@
+﻿<h2>Form post</h2>
+
+<form method="post" action="/Posts/New">
+
+    <label>Description</label>
+
+    <textarea name="PostDescription"></textarea>
+
+    <br />
+
+    <label>Path</label>
+
+    <input type="text" name="ImageURL">
+
+    <br />
+
+    <input type="hidden" name="Date" value="@DateTime.Now" />
+
+
+    <button type="submit" class="btn btn-success">Add post</button>
+
+</form>

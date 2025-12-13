@@ -1,0 +1,43 @@
+﻿
+<br />
+<h2 class="text-center">POSTS</h2>
+
+<br />
+
+@if (ViewBag.Message != null)
+{
+
+    <h2 class="alert alert-success p-3 rounded-3 text-center mb-5">@ViewBag.Message</h2>
+}
+
+<br />
+
+
+@foreach (var post in ViewBag.Posts)
+{
+    <div>
+        <p>Post description: @post.PostDescription</p>
+        <p>Link to post: @post.ImageURL</p>
+        <form asp-action="Delete" asp-controller="Posts" method="post">
+            <input type="hidden" name="Id" value="@post.Id" />
+            <button type="submit" onclick="return confirm('Are you sure you want to delete this post?');">
+                Delete
+            </button>
+        </form>
+
+        <form asp-action="New" asp-controller="Posts" method="post">
+            <input type="hidden" name="Id" value="@post.Id" />
+            <button type="submit">
+                👍
+            </button>
+        </form>
+
+        <a asp-controller="Comments" asp-action="Index" asp-route-id="@post.Id">
+            Comments @* @ Redirect to the comms of the post *@
+        </a>
+    </div>
+
+    <br />
+    <br />
+}
+
