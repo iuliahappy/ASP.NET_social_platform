@@ -14,6 +14,7 @@ namespace SocialPlatformTime.Models
 
         public bool IsGroupOrNot { get; set; } // @ True if group chat, false if one-on-one chat
 
+        public int? GroupId { get; set; } //FK
         public virtual Group? Group { get; set; }
 
         public virtual ICollection<Message> Messages { get; set; } = new List<Message>();

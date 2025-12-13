@@ -9,6 +9,6 @@ namespace SocialPlatformTime.Models
         public string? Description { get; set; }
         public DateTime CreateDGroup { get; set; }
         public virtual Conversation? Conversation { get; set; }
-        public virtual ICollection<Role> Roles { get; set; } = [];
+        public virtual ICollection<RoleTable> RoleTables { get; set; } = [];
     }
 }

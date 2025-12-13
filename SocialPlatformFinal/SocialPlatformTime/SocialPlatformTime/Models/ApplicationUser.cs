@@ -17,7 +17,7 @@ namespace SocialPlatformTime.Models
 
         public virtual ICollection<Reaction>? Reactions { get; set; }
 
-        public virtual ICollection<Role>? Roles { get; set; }
+        public virtual ICollection<RoleTable>? RoleTables { get; set; }
 
         public virtual ICollection<Message>? Messages { get; set; }
 

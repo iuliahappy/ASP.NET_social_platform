@@ -2,7 +2,7 @@
 
 namespace SocialPlatformTime.Models
 {
-    public class Role
+    public class RoleTable
     {
         [DatabaseGenerated(DatabaseGeneratedOption.Identity)]
         public int Id { get; set; }
