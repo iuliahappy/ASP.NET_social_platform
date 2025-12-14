@@ -1,0 +1,20 @@
+@model SocialPlatformTime.Models.ApplicationUser
+
+<h2>Edit Profile</h2>
+
+<form method="post">
+    <input type="hidden" asp-for="Id" />
+
+    <label>First Name</label>
+    <input asp-for="FirstName" class="form-control" />
+
+    <label>Last Name</label>
+    <input asp-for="LastName" class="form-control" />
+
+    <label>Phone Number</label>
+    <input asp-for="PhoneNumber" class="form-control" />
+
+    <br />
+
+    <button type="submit">Save</button>
+</form>
