@@ -1,0 +1,13 @@
+@{
+    ViewData["Title"] = "User Profile";
+    var user = ViewBag.User;
+}
+
+<h2>@user.UserName</h2>
+
+<p >Email:  @user.Email</p>
+<p> First Name:  @user.FirstName</p>
+<p> Last Name:  @user.LastName</p>
+<p> Phone:  @user.PhoneNumber</p>
+
+<a href="/ApplicationUsers/Edit/@user.Id">Edit Profile</a>
