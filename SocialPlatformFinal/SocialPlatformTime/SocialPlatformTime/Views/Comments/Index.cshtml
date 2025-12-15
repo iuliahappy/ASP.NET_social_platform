@@ -14,7 +14,7 @@
 
 
 <form asp-controller="Comments" asp-action="New" method="post">
-    <input type="hidden" name="PostId" value="@ViewBag.PostId" />
+    <input type="hidden" name="PostId" value="@ViewBag.PostId"/>
     <textarea name="CommentBody"></textarea>
     <button type="submit">Add a comment</button>
 </form>
@@ -23,6 +23,7 @@
 {
     <div>
         <p>Time: @comm.Date</p>
+        <p>User: @comm.User.UserName</p>
         <p>Comment: @comm.CommentBody</p>
         <form asp-action="Delete" asp-controller="Comments" method="post">
             <input type="hidden" name="Id" value="@comm.Id" />

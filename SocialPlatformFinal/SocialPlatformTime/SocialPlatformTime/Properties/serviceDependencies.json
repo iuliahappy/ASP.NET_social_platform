@@ -1,13 +1,9 @@
 {
   "dependencies": {
-    "mssql2": {
-      "type": "mssql",
-      "connectionId": "ConnectionStrings:SocialPlatformTimeDB",
-      "dynamicId": null
-    },
     "mssql1": {
       "type": "mssql",
-      "connectionId": "ConnectionStrings:SocialPlatformTimeBD"
+      "connectionId": "ConnectionStrings:Conexiune",
+      "dynamicId": null
     }
   }
 }

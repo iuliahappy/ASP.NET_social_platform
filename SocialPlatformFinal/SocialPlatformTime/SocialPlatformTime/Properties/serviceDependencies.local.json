@@ -1,16 +1,10 @@
 {
   "dependencies": {
-    "mssql2": {
+    "mssql1": {
       "secretStore": "LocalSecretsFile",
       "type": "mssql.local",
-      "connectionId": "ConnectionStrings:SocialPlatformTimeDB",
+      "connectionId": "ConnectionStrings:Conexiune",
       "dynamicId": null
-    },
-    "mssql1": {
-      "secretStore": null,
-      "resourceId": null,
-      "type": "mssql.local",
-      "connectionId": "ConnectionStrings:SocialPlatformTimeBD"
     }
   }
 }

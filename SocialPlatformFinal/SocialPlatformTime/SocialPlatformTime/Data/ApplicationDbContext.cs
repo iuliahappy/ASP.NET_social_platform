@@ -2,6 +2,8 @@
 using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore;
 
+//pasul10 curs9
+
 namespace SocialPlatformTime.Data
 {
     public class ApplicationDbContext : IdentityDbContext<ApplicationUser>

@@ -13,10 +13,10 @@ namespace SocialPlatformTime.Models
 
         public DateTime Date { get; set; }
 
-        public string UserId { get; set; } //FK
+        public string? UserId { get; set; } //FK
 
+        public virtual ApplicationUser? User { get; set; }
 
-        public virtual ApplicationUser User { get; set; }
         public virtual ICollection<Comment>? Comments { get; set; } = new List<Comment>();
 
         public virtual ICollection<Reaction>? Reactions { get; set; } = new List<Reaction>();
