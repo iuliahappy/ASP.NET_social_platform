@@ -13,9 +13,9 @@ namespace SocialPlatformTime.Models
 
         public DateTime Date { get; set; }
 
-        public string? UserId { get; set; } //FK
+        public string ApplicationUserId { get; set; } //FK
 
-        public virtual ApplicationUser? User { get; set; }
+        public virtual ApplicationUser? ApplicationUser { get; set; }
 
         public virtual ICollection<Comment>? Comments { get; set; } = new List<Comment>();
 

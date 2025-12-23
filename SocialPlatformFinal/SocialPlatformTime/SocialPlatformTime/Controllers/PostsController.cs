@@ -17,7 +17,7 @@ namespace Social_Platform.Controllers
         public IActionResult Index()
         {
             var posts = _db.Posts
-                             .Include(p => p.User)
+                             .Include(p => p.ApplicationUser)
                              .OrderByDescending(p => p.Date);
 
             // ViewBag.OriceDenumireSugestiva
@@ -45,7 +45,7 @@ namespace Social_Platform.Controllers
         {
             post.Date = DateTime.Now;
 
-            post.UserId = _userManager.GetUserId(User); 
+            post.ApplicationUserId = _userManager.GetUserId(User); 
 
             if (ModelState.IsValid)
             {

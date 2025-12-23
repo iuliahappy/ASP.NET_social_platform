@@ -14,10 +14,10 @@ namespace SocialPlatformTime.Models
 
         public int PostId { get; set; } //FK
 
-        public string? UserId { get; set; } //FK
+        public string ApplicationUserId { get; set; } //FK
 
         public virtual Post? Post { get; set; }
 
-        public virtual ApplicationUser? User { get; set; }
+        public virtual ApplicationUser? ApplicationUser { get; set; }
     }
 }

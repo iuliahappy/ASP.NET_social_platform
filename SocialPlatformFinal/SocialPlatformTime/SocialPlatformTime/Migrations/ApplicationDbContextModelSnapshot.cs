@@ -238,6 +238,10 @@ namespace SocialPlatformTime.Migrations
 
                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
 
+                    b.Property<string>("ApplicationUserId")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(450)");
+
                     b.Property<string>("CommentBody")
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
@@ -248,14 +252,11 @@ namespace SocialPlatformTime.Migrations
                     b.Property<int>("PostId")
                         .HasColumnType("int");
 
-                    b.Property<string>("UserId")
-                        .HasColumnType("nvarchar(450)");
-
                     b.HasKey("Id");
 
-                    b.HasIndex("PostId");
+                    b.HasIndex("ApplicationUserId");
 
-                    b.HasIndex("UserId");
+                    b.HasIndex("PostId");
 
                     b.ToTable("Comments");
                 });
@@ -350,7 +351,7 @@ namespace SocialPlatformTime.Migrations
                     b.Property<int>("Id")
                         .HasColumnType("int");
 
-                    b.Property<string>("UserId")
+                    b.Property<string>("ApplicationUserId")
                         .HasColumnType("nvarchar(450)");
 
                     b.Property<int>("ConversationId")
@@ -363,11 +364,11 @@ namespace SocialPlatformTime.Migrations
                     b.Property<DateTime>("dateTime")
                         .HasColumnType("datetime2");
 
-                    b.HasKey("Id", "UserId", "ConversationId");
+                    b.HasKey("Id", "ApplicationUserId", "ConversationId");
+
+                    b.HasIndex("ApplicationUserId");
 
                     b.HasIndex("ConversationId");
-
-                    b.HasIndex("UserId");
 
                     b.ToTable("Messages");
                 });
@@ -380,6 +381,10 @@ namespace SocialPlatformTime.Migrations
 
                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
 
+                    b.Property<string>("ApplicationUserId")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(450)");
+
                     b.Property<DateTime>("Date")
                         .HasColumnType("datetime2");
 
@@ -391,12 +396,9 @@ namespace SocialPlatformTime.Migrations
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
-                    b.Property<string>("UserId")
-                        .HasColumnType("nvarchar(450)");
-
                     b.HasKey("Id");
 
-                    b.HasIndex("UserId");
+                    b.HasIndex("ApplicationUserId");
 
                     b.ToTable("Posts");
                 });
@@ -410,24 +412,20 @@ namespace SocialPlatformTime.Migrations
                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
 
                     b.Property<string>("ApplicationUserId")
+                        .IsRequired()
                         .HasColumnType("nvarchar(450)");
 
-                    b.Property<int>("PostId")
+                    b.Property<int?>("PostId")
                         .HasColumnType("int");
 
                     b.Property<int>("ReactionCode")
                         .HasColumnType("int");
-
-                    b.Property<string>("UserId")
-                        .HasColumnType("nvarchar(450)");
 
                     b.HasKey("Id");
 
                     b.HasIndex("ApplicationUserId");
 
                     b.HasIndex("PostId");
-
-                    b.HasIndex("UserId");
 
                     b.ToTable("Reactions");
                 });
@@ -440,7 +438,7 @@ namespace SocialPlatformTime.Migrations
 
                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
 
-                    b.Property<string>("UserId")
+                    b.Property<string>("ApplicationUserId")
                         .HasColumnType("nvarchar(450)");
 
                     b.Property<int>("GroupId")
@@ -450,13 +448,13 @@ namespace SocialPlatformTime.Migrations
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
-                    b.HasKey("Id", "UserId", "GroupId");
+                    b.HasKey("Id", "ApplicationUserId", "GroupId");
+
+                    b.HasIndex("ApplicationUserId");
 
                     b.HasIndex("GroupId");
 
-                    b.HasIndex("UserId");
-
-                    b.ToTable("RoleTables");
+                    b.ToTable("GroupRoles");
                 });
 
             modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityRoleClaim<string>", b =>
@@ -512,20 +510,21 @@ namespace SocialPlatformTime.Migrations
 
             modelBuilder.Entity("SocialPlatformTime.Models.Comment", b =>
                 {
+                    b.HasOne("SocialPlatformTime.Models.ApplicationUser", "ApplicationUser")
+                        .WithMany("Comments")
+                        .HasForeignKey("ApplicationUserId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
                     b.HasOne("SocialPlatformTime.Models.Post", "Post")
                         .WithMany("Comments")
                         .HasForeignKey("PostId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
-                    b.HasOne("SocialPlatformTime.Models.ApplicationUser", "User")
-                        .WithMany("Comments")
-                        .HasForeignKey("UserId")
-                        .OnDelete(DeleteBehavior.Restrict);
+                    b.Navigation("ApplicationUser");
 
                     b.Navigation("Post");
-
-                    b.Navigation("User");
                 });
 
             modelBuilder.Entity("SocialPlatformTime.Models.Conversation", b =>
@@ -558,71 +557,68 @@ namespace SocialPlatformTime.Migrations
 
             modelBuilder.Entity("SocialPlatformTime.Models.Message", b =>
                 {
+                    b.HasOne("SocialPlatformTime.Models.ApplicationUser", "ApplicationUser")
+                        .WithMany("Messages")
+                        .HasForeignKey("ApplicationUserId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
                     b.HasOne("SocialPlatformTime.Models.Conversation", "Conversation")
                         .WithMany("Messages")
                         .HasForeignKey("ConversationId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
-                    b.HasOne("SocialPlatformTime.Models.ApplicationUser", "User")
-                        .WithMany("Messages")
-                        .HasForeignKey("UserId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
+                    b.Navigation("ApplicationUser");
 
                     b.Navigation("Conversation");
-
-                    b.Navigation("User");
                 });
 
             modelBuilder.Entity("SocialPlatformTime.Models.Post", b =>
                 {
-                    b.HasOne("SocialPlatformTime.Models.ApplicationUser", "User")
+                    b.HasOne("SocialPlatformTime.Models.ApplicationUser", "ApplicationUser")
                         .WithMany("Posts")
-                        .HasForeignKey("UserId");
+                        .HasForeignKey("ApplicationUserId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
 
-                    b.Navigation("User");
+                    b.Navigation("ApplicationUser");
                 });
 
             modelBuilder.Entity("SocialPlatformTime.Models.Reaction", b =>
                 {
-                    b.HasOne("SocialPlatformTime.Models.ApplicationUser", null)
+                    b.HasOne("SocialPlatformTime.Models.ApplicationUser", "ApplicationUser")
                         .WithMany("Reactions")
-                        .HasForeignKey("ApplicationUserId");
+                        .HasForeignKey("ApplicationUserId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
 
                     b.HasOne("SocialPlatformTime.Models.Post", "Post")
                         .WithMany("Reactions")
-                        .HasForeignKey("PostId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
+                        .HasForeignKey("PostId");
 
-                    b.HasOne("SocialPlatformTime.Models.ApplicationUser", "User")
-                        .WithMany()
-                        .HasForeignKey("UserId")
-                        .OnDelete(DeleteBehavior.Restrict);
+                    b.Navigation("ApplicationUser");
 
                     b.Navigation("Post");
-
-                    b.Navigation("User");
                 });
 
             modelBuilder.Entity("SocialPlatformTime.Models.RoleTable", b =>
                 {
+                    b.HasOne("SocialPlatformTime.Models.ApplicationUser", "ApplicationUser")
+                        .WithMany("RoleTables")
+                        .HasForeignKey("ApplicationUserId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
                     b.HasOne("SocialPlatformTime.Models.Group", "Group")
                         .WithMany("RoleTables")
                         .HasForeignKey("GroupId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
-                    b.HasOne("SocialPlatformTime.Models.ApplicationUser", "User")
-                        .WithMany("RoleTables")
-                        .HasForeignKey("UserId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
+                    b.Navigation("ApplicationUser");
 
                     b.Navigation("Group");
-
-                    b.Navigation("User");
                 });
 
             modelBuilder.Entity("SocialPlatformTime.Models.ApplicationUser", b =>

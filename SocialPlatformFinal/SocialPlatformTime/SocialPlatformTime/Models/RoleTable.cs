@@ -7,13 +7,13 @@ namespace SocialPlatformTime.Models
         [DatabaseGenerated(DatabaseGeneratedOption.Identity)]
         public int Id { get; set; }
 
-        public string? UserId { get; set; } 
+        public string ApplicationUserId { get; set; } // FK
 
-        public int? GroupId { get; set; }
-       
-        public string RoleName { get; set; }
+        public int GroupId { get; set; } // FK
 
-        public virtual ApplicationUser? User { get; set; }
+        public string RoleName { get; set; } 
+
+        public virtual ApplicationUser? ApplicationUser { get; set; }
 
         public virtual Group? Group { get; set; }
 

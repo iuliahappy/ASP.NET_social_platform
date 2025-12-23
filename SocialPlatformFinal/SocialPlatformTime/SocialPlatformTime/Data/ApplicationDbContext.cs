@@ -2,8 +2,6 @@
 using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore;
 
-//pasul10 curs9
-
 namespace SocialPlatformTime.Data
 {
     public class ApplicationDbContext : IdentityDbContext<ApplicationUser>
@@ -17,28 +15,28 @@ namespace SocialPlatformTime.Data
         public DbSet<Comment> Comments { get; set; }
         public DbSet<Post> Posts { get; set; }
         public DbSet<Reaction> Reactions { get; set; }
-        public DbSet<RoleTable> RoleTables { get; set; }
+        public DbSet<RoleTable> GroupRoles { get; set; }
         public DbSet<Message> Messages { get; set; }
         public DbSet<Conversation> Conversations { get; set; }
         public DbSet<Group> Groups { get; set; }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
-            // definirea relatiei many-to-many dintre ApplicationUser si Conversation
-
             base.OnModelCreating(modelBuilder);
+
+            // definirea relatiei many-to-many dintre ApplicationUser si Conversation
 
             // definire primary key compus
             modelBuilder.Entity<Message>()
-                .HasKey(ab => new { ab.Id, ab.UserId, ab.ConversationId });
+                .HasKey(ab => new { ab.Id, ab.ApplicationUserId, ab.ConversationId });
 
 
             // definire relatii cu modelele ApplicationUser si Conversation (FK)
 
             modelBuilder.Entity<Message>()
-                .HasOne(ab => ab.User)
+                .HasOne(ab => ab.ApplicationUser)
                 .WithMany(ab => ab.Messages)
-                .HasForeignKey(ab => ab.UserId);
+                .HasForeignKey(ab => ab.ApplicationUserId);
 
             modelBuilder.Entity<Message>()
                 .HasOne(ab => ab.Conversation)
@@ -50,15 +48,14 @@ namespace SocialPlatformTime.Data
 
             // definire primary key compus
             modelBuilder.Entity<RoleTable>()
-                .HasKey(bb => new { bb.Id, bb.UserId, bb.GroupId });
-
+                .HasKey(bb => new { bb.Id, bb.ApplicationUserId, bb.GroupId });
 
             // definire relatii cu modelele ApplicationUser si Group (FK)
 
             modelBuilder.Entity<RoleTable>()
-                .HasOne(bb => bb.User)
+                .HasOne(bb => bb.ApplicationUser)
                 .WithMany(bb => bb.RoleTables)
-                .HasForeignKey(bb => bb.UserId);
+                .HasForeignKey(bb => bb.ApplicationUserId);
 
             modelBuilder.Entity<RoleTable>()
                 .HasOne(bb => bb.Group)
@@ -66,19 +63,21 @@ namespace SocialPlatformTime.Data
                 .HasForeignKey(bb => bb.GroupId);
 
 
+
             // rezolvare stergere in cascada pentru Follower si Following - vom rezolva logica de stergere in Controller
             // Configurarea pentru FollowRequest
             modelBuilder.Entity<FollowRequest>()
                 .HasOne(fr => fr.Follower)
-                .WithMany(fr => fr.FollowRequestsSent) 
+                .WithMany(fr => fr.FollowRequestsSent)
                 .HasForeignKey(fr => fr.FollowerId)
                 .OnDelete(DeleteBehavior.Restrict); // Opreste stergerea automata
 
             modelBuilder.Entity<FollowRequest>()
                 .HasOne(fr => fr.Following)
-                .WithMany(fr => fr.FollowRequestsReceived) 
+                .WithMany(fr => fr.FollowRequestsReceived)
                 .HasForeignKey(fr => fr.FollowingId)
                 .OnDelete(DeleteBehavior.Restrict); // Opreste stergerea automata
+
 
             //trebuie sa oprim stergerea automata si pentru Comments pentru ca:
             // daca lasam fara :
@@ -88,19 +87,20 @@ namespace SocialPlatformTime.Data
 
             // SOLUTIE: oprim stergerea automata pe relatia User -> Comment, la Post o putem lasa, ne vom asigura din Controller ca se sterge totul corect
             modelBuilder.Entity<Comment>()
-                .HasOne(c => c.User)
-                .WithMany(u => u.Comments) 
-                .HasForeignKey(c => c.UserId)
+                .HasOne(c => c.ApplicationUser)
+                .WithMany(u => u.Comments)
+                .HasForeignKey(c => c.ApplicationUserId)
                 .OnDelete(DeleteBehavior.Restrict); // Opresc stergerea automata User -> Comment
 
             // se intampla acelsi lucru si cu Reaction (User->Reaction, User->Post->Reaction)
             // rezolvare prin oprirea stergerii in cascada pe relatia User -> Reaction, rezolvam in Controller 
             // CONFIGURARE PENTRU REACTION (Liking)
             modelBuilder.Entity<Reaction>()
-                .HasOne(r => r.User)
-                .WithMany()
-                .HasForeignKey(r => r.UserId)
+                .HasOne(r => r.ApplicationUser)
+                .WithMany(r => r.Reactions)
+                .HasForeignKey(r => r.ApplicationUserId)
                 .OnDelete(DeleteBehavior.Restrict); // Opresc stergerea automata User -> Reaction
+
         }
     }
 }

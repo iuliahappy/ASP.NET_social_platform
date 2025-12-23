@@ -14,11 +14,11 @@ namespace SocialPlatformTime.Models
 
         [ForeignKey("FollowerId")]
         [InverseProperty("FollowRequestsSent")]
-        public virtual ApplicationUser Follower { get; set; }
+        public virtual ApplicationUser? Follower { get; set; }
 
         [ForeignKey("FollowingId")]
         [InverseProperty("FollowRequestsReceived")]
-        public virtual ApplicationUser Following { get; set; }
+        public virtual ApplicationUser? Following { get; set; }
 
 
     }

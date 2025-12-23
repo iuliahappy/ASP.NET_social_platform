@@ -16,7 +16,7 @@ namespace Social_Platform.Controllers
         {
             var comments = _db.Comments
                             .Where(c => c.PostId == id)
-                            .Include(c => c.User)
+                            .Include(c => c.ApplicationUser)
                             .OrderByDescending(p => p.Date);
 
             ViewBag.PostId = id;
@@ -33,6 +33,7 @@ namespace Social_Platform.Controllers
 
             if (ModelState.IsValid)
             {
+                comm.ApplicationUserId = _userManager.GetUserId(User);
                 _db.Comments.Add(comm);
                 _db.SaveChanges();
                 return Redirect("/Comments/Index/" + comm.PostId);
