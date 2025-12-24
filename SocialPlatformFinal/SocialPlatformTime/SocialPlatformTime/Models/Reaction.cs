@@ -10,7 +10,6 @@ namespace SocialPlatformTime.Models
         public int ReactionCode { get; set; } //@ The code of the specific emoji
         //@ I think we can replace the code with the emoji in the view
 
-
         public string ApplicationUserId { get; set; } // FK
 
         public virtual ApplicationUser? ApplicationUser { get; set; }

@@ -23,6 +23,7 @@ namespace Social_Platform.Controllers
         {
             var posts = _db.Posts
                            .Include(p => p.ApplicationUser)
+                           .Include(p => p.Reactions)
                            .OrderByDescending(p => p.Date);
 
             // ViewBag.OriceDenumireSugestiva

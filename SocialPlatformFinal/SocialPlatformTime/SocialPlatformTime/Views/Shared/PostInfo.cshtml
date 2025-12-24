@@ -82,7 +82,7 @@
         <form asp-action="New" asp-controller="Reactions" method="post">
             <input type="hidden" name="PostId" value="@Model.Id" />
             <button type="submit" class="btn btn-outline-primary">
-                👍 Like
+                👍 @Model.Reactions.Count Likes
             </button>
         </form>
         </br>
