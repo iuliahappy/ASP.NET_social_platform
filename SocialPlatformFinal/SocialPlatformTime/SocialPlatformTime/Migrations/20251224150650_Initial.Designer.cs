@@ -12,8 +12,8 @@ using SocialPlatformTime.Data;
 namespace SocialPlatformTime.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    [Migration("20251224093312_RequiredComment")]
-    partial class RequiredComment
+    [Migration("20251224150650_Initial")]
+    partial class Initial
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)

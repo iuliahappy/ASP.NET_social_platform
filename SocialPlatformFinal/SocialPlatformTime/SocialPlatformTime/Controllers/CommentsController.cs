@@ -2,6 +2,7 @@
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Hosting;
 using SocialPlatformTime.Data;
 using SocialPlatformTime.Models;
 
@@ -27,23 +28,32 @@ namespace Social_Platform.Controllers
         }
 
         //// Add a comm for an asociated post
-        //[HttpPost]
-        //public IActionResult New(Comment comm)
-        //{
-        //    comm.Date = DateTime.Now;
+        [HttpPost]
+        public IActionResult New(Comment comm)
+        {
+            comm.Date = DateTime.Now;
+            comm.ApplicationUserId = _userManager.GetUserId(User);
+            ModelState.Remove("ApplicationUserId");
 
-        //    if (ModelState.IsValid)
-        //    {
-        //        comm.ApplicationUserId = _userManager.GetUserId(User);
-        //        _db.Comments.Add(comm);
-        //        _db.SaveChanges();
-        //        return Redirect("/Comments/Index/" + comm.PostId);
-        //    }
-        //    else
-        //    {
-        //        return Redirect("/Comments/Index/" + comm.PostId);
-        //    }
-        //}
+            if (ModelState.IsValid)
+            {
+                comm.ApplicationUserId = _userManager.GetUserId(User);
+                _db.Comments.Add(comm);
+                _db.SaveChanges();
+                return Redirect("/Posts/Show/" + comm.PostId);
+            }
+            else
+            {
+                //foreach (var modelState in ModelState.Values)
+                //{
+                //    foreach (var error in modelState.Errors)
+                //    {
+                //        Console.WriteLine("Eroare: " + error.ErrorMessage);
+                //    }
+                //}
+                return Redirect("/Posts/Show/" + comm.PostId);
+            }
+        }
 
 
         // In acest moment vom implementa editarea intr-o pagina View separata
