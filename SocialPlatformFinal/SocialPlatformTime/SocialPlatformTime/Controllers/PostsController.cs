@@ -106,7 +106,7 @@ namespace Social_Platform.Controllers
                 _db.SaveChanges();
                 TempData["message"] = "The post has been added!";
                 TempData["messageType"] = "alert-success";
-                Console.WriteLine(post.ApplicationUserId);
+                //Console.WriteLine(post.ApplicationUserId);
                 return RedirectToAction("Index");
             }
 
