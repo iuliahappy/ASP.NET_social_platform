@@ -89,20 +89,23 @@ namespace Social_Platform.Controllers
                 string.IsNullOrWhiteSpace(post.Image) &&
                 string.IsNullOrWhiteSpace(post.Video))
             {
-                ModelState.AddModelError("", "Trebuie să completați cel puțin un câmp (Descriere, Text Content, Image sau Video)");
+                ModelState.AddModelError("", "You have to complete at least one field!");
                 return View(post);
             }
+
+            //Console.WriteLine(post.ApplicationUserId);
 
             // ELIMINĂM eroarea pentru ApplicationUserId din ModelState
             // pentru că o setăm manual și nu vine din formular
             ModelState.Remove("ApplicationUserId");
 
-            if (ModelState.IsValid)
+            if (ModelState.IsValid)                                                            
             {
                 _db.Posts.Add(post);
                 _db.SaveChanges();
                 TempData["message"] = "The post has been added!";
                 TempData["messageType"] = "alert-success";
+                Console.WriteLine(post.ApplicationUserId);
                 return RedirectToAction("Index");
             }
 
@@ -231,6 +234,7 @@ namespace Social_Platform.Controllers
         // Add a comm for an asociated post
         // add a comment = write operation => we use HttpPost
         [HttpPost]
+        [Authorize(Roles = "Utilizator_înregistrat,Administrator")]
         public IActionResult Show([FromForm] Comment comm)
         {
             comm.Date = DateTime.Now;
@@ -241,7 +245,6 @@ namespace Social_Platform.Controllers
 
             if (ModelState.IsValid)
             {
-                comm.ApplicationUserId = _userManager.GetUserId(User);
                 _db.Comments.Add(comm);
                 _db.SaveChanges();
                 return Redirect("/Posts/Show/" + comm.PostId);
