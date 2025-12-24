@@ -1,0 +1,73 @@
+﻿@*
+    For more information on enabling MVC for empty projects, visit https://go.microsoft.com/fwlink/?LinkID=397860
+*@
+@{
+}
+@model SocialPlatformTime.Models.Post
+
+@{
+    ViewData["Title"] = "Edit Post";
+}
+
+<h2 class="text-center mt-5">Edit Post</h2>
+
+<br />
+
+<div class="container mt-5">
+    <div class="row">
+        <div class="col-md-8 offset-md-2">
+            <div class="card shadow-sm">
+                <div class="card-body">
+                    <form method="post" asp-action="Edit" asp-controller="Posts">
+
+                        @* Esențial: Trimitem ID-ul postării și ID-ul autorului pentru ca Model Binder-ul să le recunoască *@
+                        <input type="hidden" asp-for="Id" />
+                        <input type="hidden" asp-for="ApplicationUserId" />
+
+                        <div asp-validation-summary="ModelOnly" class="text-danger"></div>
+
+                        @* 1. Post Description *@
+                        <div class="form-group mb-3">
+                            <label asp-for="PostDescription" class="form-label fw-bold">Post Description</label>
+                            <textarea asp-for="PostDescription" class="form-control" rows="3"></textarea>
+                            <span asp-validation-for="PostDescription" class="text-danger"></span>
+                        </div>
+
+                        @* 2. Text Content *@
+                        <div class="form-group mb-3">
+                            <label asp-for="TextContent" class="form-label fw-bold">Text Content</label>
+                            <textarea asp-for="TextContent" class="form-control" rows="6"></textarea>
+                            <span asp-validation-for="TextContent" class="text-danger"></span>
+                        </div>
+
+                        @* 3. Image Path *@
+                        <div class="form-group mb-3">
+                            <label asp-for="Image" class="form-label fw-bold">Image</label>
+                            <input asp-for="Image" class="form-control" placeholder="/images/exemplu.jpg" />
+                            <small class="text-muted">Lăsați gol dacă nu doriți imagine.</small>
+                            <span asp-validation-for="Image" class="text-danger"></span>
+                        </div>
+
+                        @* 4. Video Path *@
+                        <div class="form-group mb-3">
+                            <label asp-for="Video" class="form-label fw-bold">Video</label>
+                            <input asp-for="Video" class="form-control" placeholder="/videos/clip.mp4" />
+                            <small class="text-muted">Lăsați gol dacă nu doriți video.</small>
+                            <span asp-validation-for="Video" class="text-danger"></span>
+                        </div>
+
+                        <div class="d-flex justify-content-between align-items-center mt-4">
+                            <a asp-action="Show" asp-route-id="@Model.Id" class="btn btn-secondary">
+                                <i class="bi bi-x-circle"></i> Exit
+                            </a>
+                            <button class="btn btn-success" type="submit">
+                                <i class="bi bi-check-lg"></i> Save modifications
+                            </button>
+                        </div>
+
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

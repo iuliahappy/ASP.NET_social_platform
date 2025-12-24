@@ -8,6 +8,7 @@ namespace SocialPlatformTime.Models
         [Key]
         public int Id { get; set; }
 
+        [Required(ErrorMessage = "Comment content is required!")]
         public string CommentBody { get; set; }
 
         public DateTime Date { get; set; }

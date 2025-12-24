@@ -1,0 +1,158 @@
+﻿@model SocialPlatformTime.Models.Post
+
+
+@* Afisarea unei postari*@
+
+<br />
+
+<div class="card">
+
+    <partial name="PostInfo" model="Model"></partial>
+
+    @if (ViewBag.EsteLogat == true && Model.ApplicationUserId == ViewBag.UserCurent)
+    {
+        <div class="d-flex flex-row justify-content-between">
+
+            <a class="btn btn-success" asp-controller="Posts" asp-action="Edit" asp-route-id="@Model.Id">Edit Post</a>
+
+            <form method="post" asp-controller="Posts" asp-action="Delete" asp-route-id="@Model.Id">
+
+                <button class="btn btn-danger" type="submit">Delete Post</button>
+
+            </form>
+
+        </div>
+    } else if (ViewBag.EsteAdmin == true)
+    {
+        <div class="d-flex flex-row justify-content-between">
+            <form method="post" asp-controller="Posts" asp-action="Delete" asp-route-id="@Model.Id">
+                <button class="btn btn-danger" type="submit">Delete Post</button>
+            </form>
+        </div>
+    }
+
+
+
+</div>
+
+<br />
+<br />
+
+@* Afisare comentarii impreuna cu butoanele de editare si stergere *@
+
+@foreach (var comm in Model.Comments) // parcurgem toate comentariile
+{
+    <div class="container">
+        <div class="row">
+            <div class="col-md-2"></div>
+
+            <div class="col-md-8">
+
+                <div>
+
+                    <p>@comm.CommentBody</p>
+                    <small>@comm.Date</small>
+                    <strong><i class="bi bi-person"></i> @comm.ApplicationUser.UserName</strong>
+
+                </div>
+                <br>
+
+                @if (comm.ApplicationUserId == ViewBag.UserCurent) // daca comm.ApplicationUserId este cel care face actiunea
+                {
+                    <div class="d-flex">
+
+                        <div>
+
+                            <a class="btn btn-outline-primary" asp-controller="Comments" asp-action="Edit" asp-route-id="@comm.Id">
+                                <i class="bi bi-pencil-square"></i> Edit
+                            </a>
+
+                        </div>
+
+                        <div>
+
+                            <form method="post" asp-controller="Comments" asp-action="Delete" asp-route-id="@comm.Id">
+
+                                <button class="btn btn-outline-danger" type="submit"><i class="bi bi-trash"></i>Delete</button>
+
+                            </form>
+
+                        </div>
+
+                    </div>
+
+                } else if (ViewBag.EsteAdmin == true)
+                {
+                    <div class="d-flex">
+
+                        <div>
+
+                            <form method="post" asp-controller="Comments" asp-action="Delete" asp-route-id="@comm.Id">
+
+                                <button class="btn btn-outline-danger" type="submit"><i class="bi bi-trash"></i>Delete</button>
+
+                            </form>
+
+                        </div>
+
+                    </div>
+                }
+
+
+                <br />
+
+            </div>
+
+            <div class="col-md-2"></div>
+
+        </div>
+
+    </div>
+}
+
+
+@* Afisarea formularului in care se poate adauga un comentariu *@
+
+<div class="container">
+
+    <div class="row">
+
+        <div class="col-md-2"></div>
+
+        <div class="col-md-8">
+
+            <div class="card">
+
+                <form method="post" asp-controller="Posts" asp-action="Show">
+
+                    <div class="card-body">
+
+                        <input type="hidden" name="PostId" value="@Model.Id" />  @*name="ArticleId" - se face model binding*@
+
+                        <label>Comment content</label>
+                        <br />
+
+                        <textarea class="form-control" name="CommentBody"></textarea>
+                         @* <span asp-validation-for="CommentBody" class="text-danger"></span> *@
+
+                        <span class="text-danger">
+                            @ViewData.ModelState["CommentBody"]?.Errors.FirstOrDefault()?.ErrorMessage
+                        </span>
+
+                        <br /><br />
+
+                        <button class="btn btn-success " type="submit">Add comment</button>
+
+                    </div>
+
+                </form>
+
+            </div>
+
+        </div>
+
+        <div class="col-md-2"></div>
+
+    </div>
+
+</div>

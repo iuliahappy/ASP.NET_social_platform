@@ -5,7 +5,7 @@
 namespace SocialPlatformTime.Migrations
 {
     /// <inheritdoc />
-    public partial class ClassesDone3andAppDbCOntext2 : Migration
+    public partial class RequiredComment : Migration
     {
         /// <inheritdoc />
         protected override void Up(MigrationBuilder migrationBuilder)

@@ -1,4 +1,5 @@
-﻿using Microsoft.AspNetCore.Identity;
+﻿using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using SocialPlatformTime.Data;
@@ -25,34 +26,123 @@ namespace Social_Platform.Controllers
             return View();
         }
 
-        // Add a comm for an asociated post
-        [HttpPost]
-        public IActionResult New(Comment comm)
-        {
-            comm.Date = DateTime.Now;
+        //// Add a comm for an asociated post
+        //[HttpPost]
+        //public IActionResult New(Comment comm)
+        //{
+        //    comm.Date = DateTime.Now;
 
-            if (ModelState.IsValid)
+        //    if (ModelState.IsValid)
+        //    {
+        //        comm.ApplicationUserId = _userManager.GetUserId(User);
+        //        _db.Comments.Add(comm);
+        //        _db.SaveChanges();
+        //        return Redirect("/Comments/Index/" + comm.PostId);
+        //    }
+        //    else
+        //    {
+        //        return Redirect("/Comments/Index/" + comm.PostId);
+        //    }
+        //}
+
+
+        // In acest moment vom implementa editarea intr-o pagina View separata
+        // Se editeaza un comentariu existent
+        // Se poate edita comentariul doar de catre utilizatorul care a postat comentariul respectiv
+        // [HttpGet] se executa implicit 
+
+        [Authorize(Roles = "Utilizator_înregistrat")]
+        public IActionResult Edit(int id)
+        {
+            Comment? comm = _db.Comments.Find(id);
+
+            if (comm is null)
             {
-                comm.ApplicationUserId = _userManager.GetUserId(User);
-                _db.Comments.Add(comm);
-                _db.SaveChanges();
-                return Redirect("/Comments/Index/" + comm.PostId);
+                return NotFound();
             }
             else
             {
-                return Redirect("/Comments/Index/" + comm.PostId);
+                // comm.ApplicationUserId - id-ul din baza de date
+                if (comm.ApplicationUserId == _userManager.GetUserId(User))
+                {
+                    return View(comm);
+                }
+                else
+                {
+                    TempData["message"] = "You can't edit this comment becuase it's not yours!";
+                    TempData["messageType"] = "alert-danger";
+                    return RedirectToAction("Index", "Posts"); // primul parametru este numele actiunii, al doilea parametru ii spune unde sa mearga (routevalue)
+                }
             }
         }
 
 
-        // Delete a comm from a post
         [HttpPost]
+        [Authorize(Roles = "Utilizator_înregistrat")]
+        public IActionResult Edit(int id, Comment requestComment)
+        {
+            Comment? comm = _db.Comments.Find(id);
+
+            if (comm is null)
+            {
+                return NotFound();
+            }
+            else // l-a gasit
+            {
+                if (comm.ApplicationUserId == _userManager.GetUserId(User))
+                {
+                    if (ModelState.IsValid)
+                    {
+
+                        comm.CommentBody = requestComment.CommentBody;
+
+                        _db.SaveChanges();
+
+                        return Redirect("/Posts/Show/" + comm.PostId);
+                    }
+                    else
+                    {
+                        return View(requestComment);
+                    }
+                }
+                //utilizatorul nu e eligibil sa faca modificari
+                else
+                {
+                    TempData["message"] = "You can't edit this comment becuase it's not yours!";
+                    TempData["messageType"] = "alert-danger";
+                    return RedirectToAction("Index", "Posts"); // primul parametru este numele actiunii, al doilea parametru ii spune unde sa mearga (routevalue)
+                }
+            }
+
+        }
+
+
+        // Delete a comm from a post
+        // Se poate sterge comentariul doar de catre utilizatorul care a postat comentariul respectiv sau de catre administrator
+        [HttpPost]
+        [Authorize(Roles = "Utilizator_înregistrat,Administrator")]
         public IActionResult Delete(int id)
         {
             Comment comm = _db.Comments.Find(id);
-            _db.Comments.Remove(comm);
-            _db.SaveChanges();
-            return Redirect("/Comments/Index/" + comm.PostId);
+            if (comm is null)
+            {
+                return NotFound();
+            }
+            else
+            {
+                if (comm.ApplicationUserId == _userManager.GetUserId(User) || User.IsInRole("Administrator"))
+                {
+                    _db.Comments.Remove(comm);
+                    _db.SaveChanges();
+                    return Redirect("/Posts/Show/" + comm.PostId);
+                }
+                else
+                {
+                    TempData["message"] = "You can't delete this comment becuase it's not yours!";
+                    TempData["messageType"] = "alert-danger";
+                    return RedirectToAction("Index", "Posts"); // primul parametru este numele actiunii, al doilea parametru ii spune unde sa mearga (routevalue)
+                }
+            }
         }
     }
 }

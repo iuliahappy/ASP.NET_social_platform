@@ -1,22 +1,81 @@
-﻿<h2>Form post</h2>
+﻿@model SocialPlatformTime.Models.Post
 
-<form method="post" action="/Posts/New">
+@{
+    ViewData["Title"] = "Create New Post";
+}
 
-    <label>Description</label>
+<div class="container mt-4">
+    <div class="row justify-content-center">
+        <div class="col-lg-8 col-md-10">
+            <div class="card shadow-sm">
+                <div class="card-header bg-primary text-white">
+                    <h3 class="card-title mb-0">
+                        <i class="bi bi-plus-circle"></i> Create New Post
+                    </h3>
+                </div>
+                <div class="card-body">
+                    <form method="post" asp-action="New" asp-controller="Posts">
+                        @if (!ViewData.ModelState.IsValid)
+                        {
+                            <div class="alert alert-danger">
+                                @foreach (var error in ViewData.ModelState.Values.SelectMany(v => v.Errors))
+                                {
+                                    <div>@error.ErrorMessage</div>
+                                }
+                            </div>
+                        }
 
-    <textarea name="PostDescription"></textarea>
+                        <!-- Post Description -->
+                        <div class="mb-3">
+                            <label asp-for="PostDescription" class="form-label fw-bold">
+                                Post Description
+                            </label>
+                            <textarea asp-for="PostDescription" class="form-control" rows="4"
+                                      placeholder="What's on your mind?"></textarea>
+                        </div>
 
-    <br />
+                        <!-- Text Content -->
+                        <div class="mb-3">
+                            <label asp-for="TextContent" class="form-label fw-bold">
+                                Text Content
+                            </label>
+                            <textarea asp-for="TextContent" class="form-control" rows="6"
+                                      placeholder="Add additional text content (optional)"></textarea>
+                        </div>
 
-    <label>Path</label>
+                        <!-- Image -->
+                        <div class="mb-3">
+                            <label asp-for="Image" class="form-label fw-bold">
+                                Image
+                            </label>
+                            <input asp-for="Image" type="text" class="form-control"
+                                   placeholder="Enter image path (e.g., /images/photo.jpg)">
+                            <small class="form-text text-muted">Path for the photo in wwwroot</small>
+                        </div>
 
-    <input type="text" name="ImageURL">
+                        <!-- Video -->
+                        <div class="mb-3">
+                            <label asp-for="Video" class="form-label fw-bold">
+                                Video
+                            </label>
+                            <input asp-for="Video" type="text" class="form-control"
+                                   placeholder="Enter video path (e.g., /videos/video.mp4)">
+                            <small class="form-text text-muted">Path for the video in wwwroot</small>
+                        </div>
 
-    <br />
 
-    <input type="hidden" name="Date" value="@DateTime.Now" />
-
-
-    <button type="submit" class="btn btn-success">Add post</button>
-
-</form>
+                        <!-- Buttons -->
+                        <div class="d-flex justify-content-between mt-4">
+                            <a asp-action="Index" asp-controller="Posts" class="btn btn-secondary">
+                                <i class="bi bi-arrow-left"></i> Cancel
+                            </a>
+                            <button type="submit" class="btn btn-primary">
+                                <i class="bi bi-check-circle"></i> Create Post
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

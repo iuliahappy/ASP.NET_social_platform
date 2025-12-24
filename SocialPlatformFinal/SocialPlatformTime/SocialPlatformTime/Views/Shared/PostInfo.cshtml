@@ -1,4 +1,4 @@
-﻿@model SocialPlatformTime.Models.Post
+﻿@* @model SocialPlatformTime.Models.Post
 
 <div class="card-body">
 
@@ -19,7 +19,8 @@
 
     <h3 class="card-title alert-success py-3 px-3 rounded-2">@Model.PostDescription</h3>
 
-    <div class="card-text">@Model.ImageURL</div> 
+
+    <div class="card-text">@Model.Image</div> 
 
     <form asp-action="New" asp-controller="Reactions" method="post">
         <input type="hidden" name="Id" value="@Model.Id" />
@@ -29,7 +30,66 @@
     </form>
 
     <a class="btn btn-success" asp-controller="Comments" asp-action="Index" asp-route-id="@Model.Id">
-        Comments @* @ Redirect to the comms of the post *@
+        Comments @* @ Redirect to the comms of the post 
     </a>
+
+</div> *@
+
+<div class="card-body">
+
+    <div class="d-flex justify-content-between flex-row mt-5">
+        <div>
+            <i class="bi bi-person" style="font-size: 1.5rem; color: black;"></i>
+            @Model.ApplicationUser?.UserName
+        </div>
+
+        <span class="alert-success">@Model.Date</span>
+    </div>
+
+    <h3 class="card-title alert-success py-3 px-3 rounded-2">@Model.PostDescription</h3>
+
+
+    @* 1. Afișare TextContent *@
+    @if (!string.IsNullOrEmpty(Model.TextContent))
+    {
+        <div class="card-text my-3 p-2 border-start border-4">
+            @Model.TextContent
+        </div>
+    }
+
+    @* 2. Afișare Imagine *@
+    @if (!string.IsNullOrEmpty(Model.Image))
+    {
+        <div class="text-center my-3">
+            <img src="@Model.Image" class="img-fluid rounded shadow-sm" alt="Post Image" style="max-height: 400px;" />
+        </div>
+    }
+
+    @* 3. Afișare Video (folosind tag-ul HTML5 video) *@
+    @if (!string.IsNullOrEmpty(Model.Video))
+    {
+        <div class="text-center my-3">
+            <video width="100%" controls class="rounded shadow-sm">
+                <source src="@Model.Video" type="video/mp4">
+                Your browser does not support the video tag.
+            </video>
+        </div>
+    }
+
+    @* --- SECȚIUNEA DE REACȚII ȘI COMENTARII --- *@
+
+    <div class="d-flex gap-2 mt-4">
+        <form asp-action="New" asp-controller="Reactions" method="post">
+            <input type="hidden" name="PostId" value="@Model.Id" />
+            <button type="submit" class="btn btn-outline-primary">
+                👍 Like
+            </button>
+        </form>
+        </br>
+        </br>
+        <a class="btn btn-success" asp-controller="Comments" asp-action="Index" asp-route-id="@Model.Id">
+            Comments
+        </a>
+    </div>
 
 </div>
