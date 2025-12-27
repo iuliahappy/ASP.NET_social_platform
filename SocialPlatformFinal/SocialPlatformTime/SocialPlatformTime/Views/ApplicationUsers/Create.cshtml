@@ -1,8 +1,7 @@
-@model SocialPlatformTime.Models.ApplicationUser
+﻿@model SocialPlatformTime.Models.ApplicationUser
 
-<h3>Edit User</h3>
-<form asp-action="Edit" method="post">
-    <input type="hidden" asp-for="Id" />
+<h3>Add New User</h3>
+<form asp-action="Create" method="post">
     <label>User Name</label>
     <input asp-for="UserName" class="form-control" />
     <label>Email</label>
@@ -13,13 +12,15 @@
     <input asp-for="LastName" class="form-control" />
     <label>Phone Number</label>
     <input asp-for="PhoneNumber" class="form-control" />
+    <label>Password</label>
+    <input name="password" type="password" class="form-control" />
     <label>Role</label>
     <select name="selectedRole" class="form-control">
         @foreach (var role in ViewBag.Roles as List<SelectListItem>)
         {
-            <option value="@role.Value" selected="@role.Selected">@role.Text</option>
+            <option value="@role.Value">@role.Text</option>
         }
     </select>
     <br />
-    <button type="submit" class="btn btn-success">Update User</button>
+    <button type="submit" class="btn btn-success">Create User</button>
 </form>

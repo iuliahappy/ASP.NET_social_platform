@@ -1,16 +1,46 @@
 @{
     ViewData["Title"] = "Users";
+    var users = ViewBag.Users as List<SocialPlatformTime.Models.ApplicationUser>;
+
 }
 
-<h2>Users</h2>
+<h2>Users' Page</h2>
 
-<ul>
-@foreach (var user in ViewBag.Users)
+@if (TempData["message"] != null)
 {
-    <li>
-        <a href="/ApplicationUsers/Show/@user.Id">
-            @user.UserName
-        </a>
-    </li>
+    <div class="alert @TempData["messageType"]">
+        @TempData["message"]
+    </div>
 }
-</ul>
+
+<a class="btn btn-primary" href="/ApplicationUsers/Create">Add New User</a>
+
+<table class="table table-striped mt-3">
+    <thead>
+        <tr>
+            <th>Email</th>
+            <th>First Name</th>
+            <th>Last Name</th>
+            <th>Roles</th>
+            <th>Actions</th>
+        </tr>
+    </thead>
+    <tbody>
+        @foreach (var user in users)
+        {
+            <tr>
+                <td>@user.Email</td>
+                <td>@user.FirstName</td>
+                <td>@user.LastName</td>
+
+                <td>
+                    <a class="btn btn-info btn-sm" href="/ApplicationUsers/Show/@user.Id">View</a>
+                    <a class="btn btn-warning btn-sm" href="/ApplicationUsers/Edit/@user.Id">Edit</a>
+                    <form method="post" action="/ApplicationUsers/Delete/@user.Id" style="display:inline">
+                        <button type="submit" class="btn btn-danger btn-sm">Delete</button>
+                    </form>
+                </td>
+            </tr>
+        }
+    </tbody>
+</table>
