@@ -5,8 +5,7 @@ using System.ComponentModel.DataAnnotations.Schema;
 namespace SocialPlatformTime.Models
 {
     public class ApplicationUser : IdentityUser
-    { 
-
+    {
         public virtual ICollection<FollowRequest>? FollowRequestsSent { get; set; }
 
         public virtual ICollection<FollowRequest>? FollowRequestsReceived { get; set; }

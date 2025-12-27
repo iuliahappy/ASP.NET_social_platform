@@ -3,6 +3,7 @@ using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using SocialPlatformTime.Data;
 
@@ -11,9 +12,11 @@ using SocialPlatformTime.Data;
 namespace SocialPlatformTime.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    partial class ApplicationDbContextModelSnapshot : ModelSnapshot
+    [Migration("20251227144506_MigratieInitiala")]
+    partial class MigratieInitiala
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -272,6 +275,9 @@ namespace SocialPlatformTime.Migrations
                     b.Property<int?>("GroupId")
                         .HasColumnType("int");
 
+                    b.Property<DateTime>("dateTime")
+                        .HasColumnType("datetime2");
+
                     b.HasKey("Id");
 
                     b.HasIndex("GroupId")
@@ -448,30 +454,6 @@ namespace SocialPlatformTime.Migrations
                     b.ToTable("GroupRoles");
                 });
 
-            modelBuilder.Entity("SocialPlatformTime.Models.UserConversation", b =>
-                {
-                    b.Property<int>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("int");
-
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
-
-                    b.Property<int>("ConversationId")
-                        .HasColumnType("int");
-
-                    b.Property<string>("UserId")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(450)");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("ConversationId");
-
-                    b.HasIndex("UserId");
-
-                    b.ToTable("UserConversation");
-                });
-
             modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityRoleClaim<string>", b =>
                 {
                     b.HasOne("Microsoft.AspNetCore.Identity.IdentityRole", null)
@@ -638,25 +620,6 @@ namespace SocialPlatformTime.Migrations
                     b.Navigation("Group");
                 });
 
-            modelBuilder.Entity("SocialPlatformTime.Models.UserConversation", b =>
-                {
-                    b.HasOne("SocialPlatformTime.Models.Conversation", "Conversation")
-                        .WithMany("UserConversations")
-                        .HasForeignKey("ConversationId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.HasOne("SocialPlatformTime.Models.ApplicationUser", "User")
-                        .WithMany()
-                        .HasForeignKey("UserId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.Navigation("Conversation");
-
-                    b.Navigation("User");
-                });
-
             modelBuilder.Entity("SocialPlatformTime.Models.ApplicationUser", b =>
                 {
                     b.Navigation("Comments");
@@ -677,8 +640,6 @@ namespace SocialPlatformTime.Migrations
             modelBuilder.Entity("SocialPlatformTime.Models.Conversation", b =>
                 {
                     b.Navigation("Messages");
-
-                    b.Navigation("UserConversations");
                 });
 
             modelBuilder.Entity("SocialPlatformTime.Models.Group", b =>

@@ -12,8 +12,8 @@ using SocialPlatformTime.Data;
 namespace SocialPlatformTime.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    [Migration("20251224193924_FKAdded")]
-    partial class FKAdded
+    [Migration("20251227151609_Schimbare")]
+    partial class Schimbare
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -272,21 +272,8 @@ namespace SocialPlatformTime.Migrations
 
                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
 
-                    b.Property<string>("Content")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
-
                     b.Property<int?>("GroupId")
                         .HasColumnType("int");
-
-                    b.Property<bool>("IsGroupOrNot")
-                        .HasColumnType("bit");
-
-                    b.Property<bool>("IsRead")
-                        .HasColumnType("bit");
-
-                    b.Property<DateTime>("dateTime")
-                        .HasColumnType("datetime2");
 
                     b.HasKey("Id");
 
@@ -363,6 +350,9 @@ namespace SocialPlatformTime.Migrations
                     b.Property<string>("Content")
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
+
+                    b.Property<bool>("IsRead")
+                        .HasColumnType("bit");
 
                     b.Property<DateTime>("dateTime")
                         .HasColumnType("datetime2");
@@ -459,6 +449,30 @@ namespace SocialPlatformTime.Migrations
                     b.HasIndex("GroupId");
 
                     b.ToTable("GroupRoles");
+                });
+
+            modelBuilder.Entity("SocialPlatformTime.Models.UserConversation", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<int>("ConversationId")
+                        .HasColumnType("int");
+
+                    b.Property<string>("UserId")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(450)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("ConversationId");
+
+                    b.HasIndex("UserId");
+
+                    b.ToTable("UserConversation");
                 });
 
             modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityRoleClaim<string>", b =>
@@ -627,6 +641,25 @@ namespace SocialPlatformTime.Migrations
                     b.Navigation("Group");
                 });
 
+            modelBuilder.Entity("SocialPlatformTime.Models.UserConversation", b =>
+                {
+                    b.HasOne("SocialPlatformTime.Models.Conversation", "Conversation")
+                        .WithMany("UserConversations")
+                        .HasForeignKey("ConversationId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("SocialPlatformTime.Models.ApplicationUser", "User")
+                        .WithMany()
+                        .HasForeignKey("UserId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Conversation");
+
+                    b.Navigation("User");
+                });
+
             modelBuilder.Entity("SocialPlatformTime.Models.ApplicationUser", b =>
                 {
                     b.Navigation("Comments");
@@ -647,6 +680,8 @@ namespace SocialPlatformTime.Migrations
             modelBuilder.Entity("SocialPlatformTime.Models.Conversation", b =>
                 {
                     b.Navigation("Messages");
+
+                    b.Navigation("UserConversations");
                 });
 
             modelBuilder.Entity("SocialPlatformTime.Models.Group", b =>
