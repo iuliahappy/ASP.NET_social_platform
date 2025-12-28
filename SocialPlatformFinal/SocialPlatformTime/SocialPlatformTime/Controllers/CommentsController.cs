@@ -61,7 +61,7 @@ namespace Social_Platform.Controllers
         // Se poate edita comentariul doar de catre utilizatorul care a postat comentariul respectiv
         // [HttpGet] se executa implicit 
 
-        [Authorize(Roles = "Utilizator_înregistrat")]
+        [Authorize(Roles = "Registered_User")]
         public IActionResult Edit(int id)
         {
             Comment? comm = _db.Comments.Find(id);
@@ -88,7 +88,7 @@ namespace Social_Platform.Controllers
 
 
         [HttpPost]
-        [Authorize(Roles = "Utilizator_înregistrat")]
+        [Authorize(Roles = "Registered_User")]
         public IActionResult Edit(int id, Comment requestComment)
         {
             Comment? comm = _db.Comments.Find(id);
@@ -130,7 +130,7 @@ namespace Social_Platform.Controllers
         // Delete a comm from a post
         // Se poate sterge comentariul doar de catre utilizatorul care a postat comentariul respectiv sau de catre administrator
         [HttpPost]
-        [Authorize(Roles = "Utilizator_înregistrat,Administrator")]
+        [Authorize(Roles = "Registered_User,Administrator")]
         public IActionResult Delete(int id)
         {
             Comment comm = _db.Comments.Find(id);

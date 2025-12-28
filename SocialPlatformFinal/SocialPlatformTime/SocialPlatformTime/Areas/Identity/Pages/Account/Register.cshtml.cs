@@ -124,8 +124,8 @@ namespace SocialPlatformTime.Areas.Identity.Pages.Account
                     _logger.LogInformation("User created a new account with password.");
 
 
-                    // adaugarea rollului de User la inregistrare
-                    await _userManager.AddToRoleAsync(user, "User");
+                    // adaugarea rolului de User la inregistrare
+                    await _userManager.AddToRoleAsync(user, "Registered_User");
 
 
                     var userId = await _userManager.GetUserIdAsync(user);

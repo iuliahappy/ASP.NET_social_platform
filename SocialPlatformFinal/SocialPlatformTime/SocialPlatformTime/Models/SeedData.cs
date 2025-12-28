@@ -27,7 +27,7 @@ namespace SocialPlatformTime.Models
                 // daca nu contine roluri, acestea se vor crea
                 context.Roles.AddRange(
                 new IdentityRole { Id = "2c5e174e-3b0e-446f-86af-483d56fd7210", Name = "Administrator", NormalizedName = "Administrator".ToUpper() },
-                new IdentityRole { Id = "2c5e174e-3b0e-446f-86af-483d56fd7212", Name = "Utilizator_înregistrat", NormalizedName = "Utilizator_înregistrat".ToUpper() }
+                new IdentityRole { Id = "2c5e174e-3b0e-446f-86af-483d56fd7212", Name = "Registered_User", NormalizedName = "Registered_User".ToUpper() }
                 );
 
 

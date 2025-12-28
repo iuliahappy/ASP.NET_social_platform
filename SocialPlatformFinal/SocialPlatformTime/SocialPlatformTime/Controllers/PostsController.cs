@@ -66,7 +66,7 @@ namespace Social_Platform.Controllers
 
         // Afiseaza formularul pentru adaugarea unei noi postari
         // [HttpGet] care se executa implicit
-        [Authorize(Roles = "Utilizator_înregistrat,Administrator")]
+        [Authorize(Roles = "Registered_User,Administrator")]
         public IActionResult New()
         {
             Post post = new Post();
@@ -76,7 +76,7 @@ namespace Social_Platform.Controllers
 
 
         [HttpPost]
-        [Authorize(Roles = "Utilizator_înregistrat,Administrator")]
+        [Authorize(Roles = "Registered_User,Administrator")]
         public IActionResult New(Post post)
         {
             post.Date = DateTime.Now;
@@ -122,7 +122,7 @@ namespace Social_Platform.Controllers
         //  Doar utilizatorul care a creat postarea o poate edita
         // [HttpGet] se executa implicit
 
-        [Authorize(Roles = "Utilizator_înregistrat")]
+        [Authorize(Roles = "Registered_User")]
         public IActionResult Edit(int id) // primim id-ul articolului pe care vreau sa il editez
         {
 
@@ -154,7 +154,7 @@ namespace Social_Platform.Controllers
         //Se verifica rolul utilizatorului care are dreptul sa editeze postarea
         // Se afiseaza formularul de editare a postarii impreuna cu datele existente in BD pentru aceasta
         [HttpPost]
-        [Authorize(Roles = "Utilizator_înregistrat")]
+        [Authorize(Roles = "Registered_User")]
         public IActionResult Edit(int id, Post requestPost)
         {
             Post? post = _db.Posts.Find(id);
@@ -203,7 +203,7 @@ namespace Social_Platform.Controllers
         //Administratorul poate sterge orice postare
 
         [HttpPost]
-        [Authorize(Roles = "Utilizator_înregistrat,Administrator")]
+        [Authorize(Roles = "Registered_User,Administrator")]
         public ActionResult Delete(int id)
         {
             Post? post = _db.Posts.Find(id);
@@ -235,7 +235,7 @@ namespace Social_Platform.Controllers
         // Add a comm for an asociated post
         // add a comment = write operation => we use HttpPost
         [HttpPost]
-        [Authorize(Roles = "Utilizator_înregistrat,Administrator")]
+        [Authorize(Roles ="Registered_User, Administrator")]
         public IActionResult Show([FromForm] Comment comm)
         {
             comm.Date = DateTime.Now;
