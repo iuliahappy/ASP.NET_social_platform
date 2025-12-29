@@ -77,7 +77,7 @@ namespace Social_Platform.Controllers
 
         [HttpPost]
         [Authorize(Roles = "Registered_User,Administrator")]
-        public IActionResult New(Post post)
+        public async Task<IActionResult> NewAsync(Post post)
         {
             post.Date = DateTime.Now;
 
@@ -100,8 +100,51 @@ namespace Social_Platform.Controllers
             // pentru că o setăm manual și nu vine din formular
             ModelState.Remove("ApplicationUserId");
 
+
+
             if (ModelState.IsValid)                                                            
             {
+                // imagine
+                if (post.ImageFile != null && post.ImageFile.Length > 0)
+                {
+                    // creez folderul wwwroot/images dacă nu există
+                    var uploadsFolder = Path.Combine(Directory.GetCurrentDirectory(), "wwwroot", "images");
+                    if (!Directory.Exists(uploadsFolder))
+                    {
+                        Directory.CreateDirectory(uploadsFolder);
+                    }
+
+                    // nume unic de fișier
+                    var fileName = Guid.NewGuid().ToString() + Path.GetExtension(post.ImageFile.FileName);
+                    var filePath = Path.Combine(uploadsFolder, fileName);
+
+                    using (var stream = new FileStream(filePath, FileMode.Create))
+                    {
+                        await post.ImageFile.CopyToAsync(stream);
+                    }
+
+                    // salvăm în DB doar calea relativă, pentru <img src="">
+                    post.Image = "/images/" + fileName;
+                }
+
+
+                // video
+                if (post.VideoFile != null && post.VideoFile.Length > 0)
+                {
+                    var videosFolder = Path.Combine(Directory.GetCurrentDirectory(), "wwwroot", "videos");
+                    Directory.CreateDirectory(videosFolder);
+
+                    var videoFileName = Guid.NewGuid().ToString() + Path.GetExtension(post.VideoFile.FileName);
+                    var videoPath = Path.Combine(videosFolder, videoFileName);
+
+                    using (var stream = new FileStream(videoPath, FileMode.Create))
+                    {
+                        await post.VideoFile.CopyToAsync(stream);
+                    }
+
+                    post.Video = "/videos/" + videoFileName;
+                }
+
                 _db.Posts.Add(post);
                 _db.SaveChanges();
                 TempData["message"] = "The post has been added!";

@@ -1,4 +1,5 @@
 ﻿using System.ComponentModel.DataAnnotations;
+using System.ComponentModel.DataAnnotations.Schema;
 
 namespace SocialPlatformTime.Models
 {
@@ -24,5 +25,13 @@ namespace SocialPlatformTime.Models
         public virtual ICollection<Comment>? Comments { get; set; } = new List<Comment>();
 
         public virtual ICollection<Reaction>? Reactions { get; set; } = new List<Reaction>();
+
+
+        // proprietate doar pentru upload imagini, nu se mapează în DB
+        [NotMapped]
+        public IFormFile? ImageFile { get; set; }
+
+        [NotMapped]
+        public IFormFile? VideoFile { get; set; }
     }
 }
