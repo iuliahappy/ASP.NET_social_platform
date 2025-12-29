@@ -472,7 +472,7 @@ namespace SocialPlatformTime.Migrations
 
                     b.HasIndex("UserId");
 
-                    b.ToTable("UserConversation");
+                    b.ToTable("UserConversations");
                 });
 
             modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityRoleClaim<string>", b =>

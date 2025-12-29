@@ -19,6 +19,7 @@ namespace SocialPlatformTime.Data
         public DbSet<Message> Messages { get; set; }
         public DbSet<Conversation> Conversations { get; set; }
         public DbSet<Group> Groups { get; set; }
+        public DbSet<UserConversation> UserConversations { get; set; }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {

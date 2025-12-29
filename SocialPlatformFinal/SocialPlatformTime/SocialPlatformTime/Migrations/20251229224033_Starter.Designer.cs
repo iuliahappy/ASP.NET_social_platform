@@ -12,8 +12,8 @@ using SocialPlatformTime.Data;
 namespace SocialPlatformTime.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    [Migration("20251228154119_NewTryForTables")]
-    partial class NewTryForTables
+    [Migration("20251229224033_Starter")]
+    partial class Starter
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -252,6 +252,9 @@ namespace SocialPlatformTime.Migrations
                     b.Property<DateTime>("Date")
                         .HasColumnType("datetime2");
 
+                    b.Property<DateTime?>("EditedDate")
+                        .HasColumnType("datetime2");
+
                     b.Property<int>("PostId")
                         .HasColumnType("int");
 
@@ -472,7 +475,7 @@ namespace SocialPlatformTime.Migrations
 
                     b.HasIndex("UserId");
 
-                    b.ToTable("UserConversation");
+                    b.ToTable("UserConversations");
                 });
 
             modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityRoleClaim<string>", b =>

@@ -6,7 +6,7 @@ using Microsoft.EntityFrameworkCore.Migrations;
 namespace SocialPlatformTime.Migrations
 {
     /// <inheritdoc />
-    public partial class MigratieInitiala : Migration
+    public partial class Starter : Migration
     {
         /// <inheritdoc />
         protected override void Up(MigrationBuilder migrationBuilder)
@@ -230,7 +230,6 @@ namespace SocialPlatformTime.Migrations
                 {
                     Id = table.Column<int>(type: "int", nullable: false)
                         .Annotation("SqlServer:Identity", "1, 1"),
-                    dateTime = table.Column<DateTime>(type: "datetime2", nullable: false),
                     GroupId = table.Column<int>(type: "int", nullable: true)
                 },
                 constraints: table =>
@@ -278,6 +277,7 @@ namespace SocialPlatformTime.Migrations
                         .Annotation("SqlServer:Identity", "1, 1"),
                     CommentBody = table.Column<string>(type: "nvarchar(max)", nullable: false),
                     Date = table.Column<DateTime>(type: "datetime2", nullable: false),
+                    EditedDate = table.Column<DateTime>(type: "datetime2", nullable: true),
                     PostId = table.Column<int>(type: "int", nullable: false),
                     ApplicationUserId = table.Column<string>(type: "nvarchar(450)", nullable: false)
                 },
@@ -346,6 +346,32 @@ namespace SocialPlatformTime.Migrations
                         onDelete: ReferentialAction.Cascade);
                     table.ForeignKey(
                         name: "FK_Messages_Conversations_ConversationId",
+                        column: x => x.ConversationId,
+                        principalTable: "Conversations",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Cascade);
+                });
+
+            migrationBuilder.CreateTable(
+                name: "UserConversations",
+                columns: table => new
+                {
+                    Id = table.Column<int>(type: "int", nullable: false)
+                        .Annotation("SqlServer:Identity", "1, 1"),
+                    UserId = table.Column<string>(type: "nvarchar(450)", nullable: false),
+                    ConversationId = table.Column<int>(type: "int", nullable: false)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_UserConversations", x => x.Id);
+                    table.ForeignKey(
+                        name: "FK_UserConversations_AspNetUsers_UserId",
+                        column: x => x.UserId,
+                        principalTable: "AspNetUsers",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Cascade);
+                    table.ForeignKey(
+                        name: "FK_UserConversations_Conversations_ConversationId",
                         column: x => x.ConversationId,
                         principalTable: "Conversations",
                         principalColumn: "Id",
@@ -452,6 +478,16 @@ namespace SocialPlatformTime.Migrations
                 name: "IX_Reactions_PostId",
                 table: "Reactions",
                 column: "PostId");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_UserConversations_ConversationId",
+                table: "UserConversations",
+                column: "ConversationId");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_UserConversations_UserId",
+                table: "UserConversations",
+                column: "UserId");
         }
 
         /// <inheritdoc />
@@ -488,19 +524,22 @@ namespace SocialPlatformTime.Migrations
                 name: "Reactions");
 
             migrationBuilder.DropTable(
-                name: "AspNetRoles");
+                name: "UserConversations");
 
             migrationBuilder.DropTable(
-                name: "Conversations");
+                name: "AspNetRoles");
 
             migrationBuilder.DropTable(
                 name: "Posts");
 
             migrationBuilder.DropTable(
-                name: "Groups");
+                name: "Conversations");
 
             migrationBuilder.DropTable(
                 name: "AspNetUsers");
+
+            migrationBuilder.DropTable(
+                name: "Groups");
         }
     }
 }

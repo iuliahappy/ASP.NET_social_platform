@@ -1,0 +1,51 @@
+﻿@model IEnumerable<SocialPlatformTime.Models.Message>
+
+@{
+    ViewData["Title"] = "Conversație";
+    var currentUserId = ViewBag.CurrentUserId as string;
+}
+
+<div class="container mt-4">
+    <div class="card">
+        <div class="card-header bg-primary text-white">
+            <h4 class="mb-0">Chat</h4>
+        </div>
+        <div class="card-body" style="height: 400px; overflow-y: auto; background-color: #f8f9fa;">
+            @foreach (var message in Model)
+            {
+                bool isMine = message.ApplicationUserId == currentUserId;
+
+                <div class="d-flex @(isMine ? "justify-content-end" : "justify-content-start") mb-3">
+                    <div class="p-3 shadow-sm @(isMine ? "bg-primary text-white rounded-start rounded-top" : "bg-white text-dark rounded-end rounded-top")" 
+                         style="max-width: 70%;">
+                        
+                        @if (!isMine)
+                        {
+                            <small class="d-block font-weight-bold mb-1">@message.ApplicationUser.UserName</small>
+                        }
+                        
+                        <p class="mb-0">@message.Content</p>
+                        
+                        <small class="d-block text-end mt-1 @(isMine ? "text-light" : "text-muted")" style="font-size: 0.75rem;">
+                            @message.dateTime.ToString("HH:mm")
+                        </small>
+                    </div>
+                </div>
+            }
+        </div>
+        <div class="card-footer">
+            <form asp-controller="Messages" asp-action="New" method="post" class="input-group">
+                <input type="hidden" name="ConversationId" value="@ViewBag.ConversationId" />
+                <input type="text" name="content" class="form-control" placeholder="Write your message here..." required>
+                <button type="submit" class="btn btn-primary">Trimite</button>
+            </form>
+        </div>
+    </div>
+</div>
+
+<style>
+    /* Stiluri mici pentru a face bulele de chat să arate mai bine */
+    .rounded-start { border-bottom-left-radius: 15px !important; border-top-left-radius: 15px !important; }
+    .rounded-end { border-bottom-right-radius: 15px !important; border-top-right-radius: 15px !important; }
+    .rounded-top { border-top-left-radius: 15px !important; border-top-right-radius: 15px !important; }
+</style>
