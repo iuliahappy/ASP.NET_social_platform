@@ -1,8 +1,389 @@
-﻿@{
+﻿@* @{
     ViewData["Title"] = "Home Page";
 }
 
 <div class="text-center">
     <h1 class="display-4">Welcome</h1>
     <p>Learn about <a href="https://learn.microsoft.com/aspnet/core">building Web apps with ASP.NET Core</a>.</p>
+</div> *@
+
+
+@{
+    ViewData["Title"] = "Home - SocialPlatformTime";
+}
+
+<!-- Hero Section cu imagine de fundal -->
+<div class="hero-section position-relative overflow-hidden">
+    <div class="hero-background"></div>
+    <div class="hero-overlay"></div>
+    <div class="container position-relative py-5">
+        <div class="row align-items-center min-vh-75">
+            <div class="col-lg-6 text-white">
+                <h1 class="display-3 fw-bold mb-4 animate-fade-in text-mint">
+                    Welcome to SocialPlatformTime!
+                </h1>
+                <p class="lead mb-4 fs-4 animate-slide-up text-mint">
+                    Connect with friends, share your thoughts, and discover amazing content.
+                    Join our vibrant community today!
+                </p>
+                @if (User.Identity?.IsAuthenticated == true)
+                {
+                    <div class="d-flex gap-3 animate-fade-in-delay">
+                        <a class="btn btn-success btn-lg px-4 py-3 shadow-lg hover-lift" asp-controller="Posts" asp-action="Index">
+                            <i class="bi bi-grid me-2"></i> View Posts
+                        </a>
+                        <a class="btn btn-outline-light btn-lg px-4 py-3 hover-lift" asp-controller="Posts" asp-action="New">
+                            <i class="bi bi-plus-circle me-2"></i> Create Post
+                        </a>
+                    </div>
+                }
+                else
+                {
+                    <div class="d-flex gap-3 animate-fade-in-delay">
+                        <a class="btn btn-success btn-lg px-4 py-3 shadow-lg hover-lift" asp-area="Identity" asp-page="/Account/Register">
+                            <i class="bi bi-person-plus me-2"></i> Sign Up
+                        </a>
+                        <a class="btn btn-outline-light btn-lg px-4 py-3 hover-lift" asp-area="Identity" asp-page="/Account/Login">
+                            <i class="bi bi-box-arrow-in-right me-2"></i> Login
+                        </a>
+                    </div>
+                }
+            </div>
+            <div class="col-lg-6 text-center">
+                <div class="floating-icons">
+                    <i class="bi bi-heart-fill icon-float icon-1"></i>
+                    <i class="bi bi-chat-dots-fill icon-float icon-2"></i>
+                    <i class="bi bi-share-fill icon-float icon-3"></i>
+                    <i class="bi bi-people-fill icon-float icon-4"></i>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="wave-divider">
+        <svg viewBox="0 0 1200 120" preserveAspectRatio="none">
+            <path d="M0,0V46.29c47.79,22.2,103.59,32.17,158,28,70.36-5.37,136.33-33.31,206.8-37.5C438.64,32.43,512.34,53.67,583,72.05c69.27,18,138.3,24.88,209.4,13.08,36.15-6,69.85-17.84,104.45-29.34C989.49,25,1113-14.29,1200,52.47V0Z" opacity=".25" fill="currentColor"></path>
+            <path d="M0,0V15.81C13,36.92,27.64,56.86,47.69,72.05,99.41,111.27,165,111,224.58,91.58c31.15-10.15,60.09-26.07,89.67-39.8,40.92-19,84.73-46,130.83-49.67,36.26-2.85,70.9,9.42,98.6,31.56,31.77,25.39,62.32,62,103.63,73,40.44,10.79,81.35-6.69,119.13-24.28s75.16-39,116.92-43.05c59.73-5.85,113.28,22.88,168.9,38.84,30.2,8.66,59,6.17,87.09-7.5,22.43-10.89,48-26.93,60.65-49.24V0Z" opacity=".5" fill="currentColor"></path>
+            <path d="M0,0V5.63C149.93,59,314.09,71.32,475.83,42.57c43-7.64,84.23-20.12,127.61-26.46,59-8.63,112.48,12.24,165.56,35.4C827.93,77.22,886,95.24,951.2,90c86.53-7,172.46-45.71,248.8-84.81V0Z" fill="currentColor"></path>
+        </svg>
+    </div>
 </div>
+
+<!-- Features Section cu carduri colorate -->
+<div class="container mb-5 py-5">
+    <div class="row text-center mb-5">
+        <div class="col-12">
+            <h2 class="display-4 fw-bold mb-3">Why SocialPlatformTime?</h2>
+            <p class="text-muted fs-5">Discover what makes our platform special</p>
+        </div>
+    </div>
+
+    <div class="row g-4">
+        <div class="col-md-4">
+            <div class="feature-card card-1 h-100 shadow-lg border-0">
+                <div class="card-body text-center p-5">
+                    <div class="feature-icon mb-4">
+                        <i class="bi bi-chat-dots"></i>
+                    </div>
+                    <h4 class="card-title fw-bold mb-3">Share Your Thoughts</h4>
+                    <p class="card-text">
+                        Post your ideas, photos, and videos. Express yourself freely and connect with others.
+                    </p>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-4">
+            <div class="feature-card card-2 h-100 shadow-lg border-0">
+                <div class="card-body text-center p-5">
+                    <div class="feature-icon mb-4">
+                        <i class="bi bi-heart"></i>
+                    </div>
+                    <h4 class="card-title fw-bold mb-3">React & Engage</h4>
+                    <p class="card-text">
+                        Like posts, comment on discussions, and interact with the community in meaningful ways.
+                    </p>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-4">
+            <div class="feature-card card-3 h-100 shadow-lg border-0">
+                <div class="card-body text-center p-5">
+                    <div class="feature-icon mb-4">
+                        <i class="bi bi-people"></i>
+                    </div>
+                    <h4 class="card-title fw-bold mb-3">Build Connections</h4>
+                    <p class="card-text">
+                        Follow friends, join groups, and build a network of people who share your interests.
+                    </p>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Call to Action Section -->
+@if (User.Identity?.IsAuthenticated == true)
+{
+    <div class="cta-section py-5">
+        <div class="container">
+            <div class="row text-center">
+                <div class="col-md-12">
+                    <h3 class="display-5 fw-bold text-white mb-4">Ready to get started?</h3>
+                    <a class="btn btn-success btn-lg px-5 py-3 shadow-lg hover-lift" asp-controller="Posts" asp-action="New">
+                        <i class="bi bi-plus-circle me-2"></i> Create Your First Post
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+}
+
+<!-- Custom CSS -->
+<style>
+    /* Hero Section cu nuanțe medii */
+    .hero-section {
+        min-height: 90vh;
+        background: linear-gradient(135deg, #9d7fd9 0%, #b89ae8 50%, #7bc87a 100%);
+        position: relative;
+        overflow: hidden;
+    }
+
+    .hero-background {
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background-image: radial-gradient(circle at 20% 50%, rgba(255, 255, 255, 0.15) 0%, transparent 50%), radial-gradient(circle at 80% 80%, rgba(255, 255, 255, 0.15) 0%, transparent 50%), radial-gradient(circle at 40% 20%, rgba(255, 255, 255, 0.15) 0%, transparent 50%);
+        animation: backgroundMove 20s ease-in-out infinite;
+    }
+
+    .hero-overlay {
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background: rgba(0, 0, 0, 0.15);
+    }
+
+    .wave-divider {
+        position: absolute;
+        bottom: 0;
+        left: 0;
+        width: 100%;
+        height: 120px;
+        color: white;
+        overflow: hidden;
+    }
+
+        .wave-divider svg {
+            width: 100%;
+            height: 100%;
+        }
+
+    /* Animații pentru text */
+    @@keyframes fadeIn {
+        from {
+            opacity: 0;
+            transform: translateY(30px);
+        }
+
+        to {
+            opacity: 1;
+            transform: translateY(0);
+        }
+    }
+
+    @@keyframes slideUp {
+        from {
+            opacity: 0;
+            transform: translateY(50px);
+        }
+
+        to {
+            opacity: 1;
+            transform: translateY(0);
+        }
+    }
+
+    @@keyframes backgroundMove {
+        0%, 100% {
+            transform: translate(0, 0);
+        }
+
+        50% {
+            transform: translate(-20px, -20px);
+        }
+    }
+
+    @@keyframes float {
+        0%, 100% {
+            transform: translateY(0px) rotate(0deg);
+        }
+
+        50% {
+            transform: translateY(-30px) rotate(10deg);
+        }
+    }
+
+    @@keyframes pulse {
+        0%, 100% {
+            transform: scale(1);
+        }
+
+        50% {
+            transform: scale(1.1);
+        }
+    }
+
+    .animate-fade-in {
+        animation: fadeIn 1s ease-out;
+    }
+
+    .animate-slide-up {
+        animation: slideUp 1s ease-out 0.3s both;
+    }
+
+    .animate-fade-in-delay {
+        animation: fadeIn 1s ease-out 0.6s both;
+    }
+
+    /* Floating Icons cu nuanțe medii */
+    .floating-icons {
+        position: relative;
+        height: 400px;
+    }
+
+    .icon-float {
+        position: absolute;
+        font-size: 4rem;
+        color: rgba(255, 255, 255, 0.9);
+        animation: float 3s ease-in-out infinite;
+    }
+
+    .icon-1 {
+        top: 10%;
+        left: 20%;
+        animation-delay: 0s;
+        color: #ff8a95;
+    }
+
+    .icon-2 {
+        top: 30%;
+        right: 20%;
+        animation-delay: 0.5s;
+        color: #6bc5d4;
+    }
+
+    .icon-3 {
+        bottom: 30%;
+        left: 30%;
+        animation-delay: 1s;
+        color: #7bc87a;
+    }
+
+    .icon-4 {
+        bottom: 10%;
+        right: 30%;
+        animation-delay: 1.5s;
+        color: #7dd3a0;
+    }
+
+    /* Feature Cards cu nuanțe medii, dar text alb pentru contrast */
+    .feature-card {
+        transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        border-radius: 20px;
+        overflow: hidden;
+        position: relative;
+    }
+
+        .feature-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(135deg, transparent 0%, rgba(255,255,255,0.15) 100%);
+            opacity: 0;
+            transition: opacity 0.3s;
+        }
+
+        .feature-card:hover::before {
+            opacity: 1;
+        }
+
+        .feature-card:hover {
+            transform: translateY(-15px) scale(1.02);
+            box-shadow: 0 20px 40px rgba(0,0,0,0.25) !important;
+        }
+
+    .card-1 {
+        background: linear-gradient(135deg, #9d7fd9 0%, #b89ae8 100%);
+        color: white;
+    }
+
+    .card-2 {
+        background: linear-gradient(135deg, #7bc87a 0%, #95d494 100%);
+        color: white;
+    }
+
+    .card-3 {
+        background: linear-gradient(135deg, #6bb6ff 0%, #8cc8ff 100%);
+        color: white;
+    }
+
+    .feature-icon {
+        font-size: 4rem;
+        animation: pulse 2s ease-in-out infinite;
+    }
+
+        .feature-icon i {
+            filter: drop-shadow(0 4px 8px rgba(0,0,0,0.2));
+        }
+
+    /* Gradient Text cu nuanțe medii */
+    .gradient-text {
+        background: linear-gradient(135deg, #9d7fd9 0%, #b89ae8 50%, #7bc87a 100%);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        background-clip: text;
+    }
+
+    /* Butoane cu hover effect */
+    .hover-lift {
+        transition: all 0.3s ease;
+    }
+
+        .hover-lift:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 25px rgba(0,0,0,0.3) !important;
+        }
+
+    /* CTA Section cu nuanțe medii */
+    .cta-section {
+        background: linear-gradient(135deg, #9d7fd9 0%, #7bc87a 100%);
+        border-radius: 30px 30px 0 0;
+        margin-top: 5rem;
+    }
+
+    .text-mint {
+        color: #E0FFFF;
+    }
+    /* Responsive */
+    @@media (max-width: 768px) {
+        .hero-section {
+            min-height: 70vh;
+        }
+
+        .floating-icons {
+            height: 200px;
+        }
+
+        .icon-float {
+            font-size: 2rem;
+        }
+    }
+</style>

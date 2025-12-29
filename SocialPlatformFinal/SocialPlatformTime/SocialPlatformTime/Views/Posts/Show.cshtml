@@ -52,6 +52,12 @@
 
                     <p>@comm.CommentBody</p>
                     <small>@comm.Date</small>
+                    @if (comm.EditedDate.HasValue)
+                    {
+                        <p class="text-muted small">
+                            <em>Edited: @comm.EditedDate.Value</em>
+                        </p>
+                    }
                     <strong><i class="bi bi-person"></i> @comm.ApplicationUser.UserName</strong>
 
                 </div>

@@ -4,6 +4,14 @@
     ViewData["Title"] = "Create New Post";
 }
 
+
+<style>
+    .text-image-video {
+        color: #00008B !important;
+    }
+</style> 
+
+
 <div class="container mt-4">
     <div class="row justify-content-center">
         <div class="col-lg-8 col-md-10">
@@ -44,39 +52,18 @@
                         </div>
 
                         <!-- Image -->
-                        @* <div class="mb-3">
-                            <label asp-for="Image" class="form-label fw-bold">
-                                Image
-                            </label>
-                            <input asp-for="Image" type="text" class="form-control"
-                                   placeholder="Enter image path (e.g., /images/photo.jpg)">
-                            <small class="form-text text-muted">Path for the photo in wwwroot</small>
-                        </div> *@
-
-
                         <div class="mb-3">
                             <label asp-for="ImageFile" class="form-label fw-bold">Upload image</label>
                             <input asp-for="ImageFile" type="file" class="form-control" accept="image/*" />
-                            <small class="form-text text-muted">Select a photo from your computer.</small>
+                            <small class="form-text text-muted text-image-video">Select a photo from your computer.</small>
                         </div>
-
-
-                        <!-- Video -->
-                        @* <div class="mb-3">
-                            <label asp-for="Video" class="form-label fw-bold">
-                                Video
-                            </label>
-                            <input asp-for="Video" type="text" class="form-control"
-                                   placeholder="Enter video path (e.g., /videos/video.mp4)">
-                            <small class="form-text text-muted">Path for the video in wwwroot</small>
-                        </div> *@
 
 
                         <!-- Upload video -->
                         <div class="mb-3">
                             <label asp-for="VideoFile" class="form-label fw-bold">Upload video</label>
                             <input asp-for="VideoFile" type="file" class="form-control" accept="video/*" />
-                            <small class="form-text text-muted">Supported formats: mp4, webm, etc.</small>
+                            <small class="form-text text-muted text-image-video" c>Supported formats: mp4, webm, etc.</small>
                         </div>
 
 

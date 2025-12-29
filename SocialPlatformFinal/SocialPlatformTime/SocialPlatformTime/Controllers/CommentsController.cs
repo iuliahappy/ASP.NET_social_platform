@@ -19,13 +19,19 @@ namespace Social_Platform.Controllers
             var comments = _db.Comments
                             .Where(c => c.PostId == id)
                             .Include(c => c.ApplicationUser)
-                            .OrderByDescending(p => p.Date);
+                            .OrderByDescending(p => p.Date)
+                            .ToList();  
 
-            ViewBag.PostId = id;
+            ViewBag.PostId = id; // îl folosim în formularul de adăugare comentariu
             ViewBag.Comments = comments;
 
-            return View();
+            SetAccessRights();
+
+            return View(comments);
         }
+
+
+
 
         //// Add a comm for an asociated post
         [HttpPost]
@@ -75,6 +81,7 @@ namespace Social_Platform.Controllers
                 // comm.ApplicationUserId - id-ul din baza de date
                 if (comm.ApplicationUserId == _userManager.GetUserId(User))
                 {
+                    //SetAccessRights();
                     return View(comm);
                 }
                 else
@@ -101,10 +108,15 @@ namespace Social_Platform.Controllers
             {
                 if (comm.ApplicationUserId == _userManager.GetUserId(User))
                 {
+                    ModelState.Remove(nameof(Comment.ApplicationUserId));
+                    ModelState.Remove(nameof(Comment.PostId));
+                    ModelState.Remove(nameof(Comment.Date));
+                    ModelState.Remove(nameof(Comment.Id));
                     if (ModelState.IsValid)
                     {
 
                         comm.CommentBody = requestComment.CommentBody;
+                        comm.EditedDate = DateTime.Now; // SETĂM data editării
 
                         _db.SaveChanges();
 
@@ -112,6 +124,14 @@ namespace Social_Platform.Controllers
                     }
                     else
                     {
+                        // Restaurăm valorile pentru a afișa formularul corect
+                        requestComment.Id = comm.Id;
+                        requestComment.PostId = comm.PostId;
+                        requestComment.ApplicationUserId = comm.ApplicationUserId;
+                        requestComment.Date = comm.Date;
+                        requestComment.EditedDate = comm.EditedDate;
+                        //SetAccessRights();
+                        Console.WriteLine("Nu merge");
                         return View(requestComment);
                     }
                 }
@@ -153,6 +173,18 @@ namespace Social_Platform.Controllers
                     return RedirectToAction("Index", "Posts"); // primul parametru este numele actiunii, al doilea parametru ii spune unde sa mearga (routevalue)
                 }
             }
+        }
+
+        private void SetAccessRights()
+        {
+            // Luăm ID-ul celui de la tastatură
+            ViewBag.UserCurent = _userManager.GetUserId(User);
+
+            // Verificăm dacă este Admin
+            ViewBag.EsteAdmin = User.IsInRole("Administrator");
+
+            // Un flag general pentru a ști dacă userul este măcar logat
+            ViewBag.EsteLogat = User.Identity.IsAuthenticated;
         }
     }
 }

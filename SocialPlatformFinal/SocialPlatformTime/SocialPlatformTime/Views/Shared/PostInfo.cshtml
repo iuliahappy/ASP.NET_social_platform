@@ -35,6 +35,12 @@
 
 </div> *@
 
+<style>
+    .text-date {
+        color: green !important;
+    }
+</style>
+
 
 @model SocialPlatformTime.Models.Post
 
@@ -48,7 +54,7 @@
                     <i class="bi bi-person" style="font-size: 1.5rem; color: black;"></i>
                     @Model.ApplicationUser?.UserName
                 </div>
-                <span class="text-muted">@Model.Date</span>
+                <span class="text-muted text-date">@Model.Date</span>
             </div>
 
             <!-- Descriere -->
@@ -82,19 +88,69 @@
             @* --- SECȚIUNEA DE REACȚII ȘI COMENTARII --- *@
 
             <div class="d-flex gap-2 mt-4">
-                <form asp-action="React" asp-controller="Reactions" method="post">
-                    <input type="hidden" name="PostId" value="@Model.Id" />
-                    <button type="submit" class="btn btn-outline-primary">
-                        👍 @Model.Reactions.Count Likes
-                    </button>
-                </form>
-                </br>
-                </br>
+                <button type="button"
+                        class="btn btn-outline-primary like-btn"
+                        data-post-id="@Model.Id"
+                        onclick="toggleLike(@Model.Id)">
+                    👍 <span class="like-count">@Model.Reactions.Count</span> Likes
+                </button>
+
                 <a class="btn btn-success" asp-controller="Comments" asp-action="Index" asp-route-id="@Model.Id">
                     Comments
+                </a>
+
+                <a class="btn btn-success rounded-pill px-4 shadow-sm ms-auto"
+                   asp-controller="Posts"
+                   asp-action="Show"
+                   asp-route-id="@Model.Id">
+                    <i class="bi bi-eye me-1"></i> Show Post
                 </a>
             </div>
 
         </div>
     </div>
 </div>
+
+<script>
+    async function toggleLike(postId) {
+        try {
+            const response = await fetch('/Reactions/React?postId=' + postId, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                }
+            });
+
+            if (!response.ok) {
+                throw new Error('Network response was not ok');
+            }
+
+            const data = await response.json();
+
+            if (data.success) {
+                // Actualizează numărul de like-uri
+                const likeCountElement = document.querySelector(`.like-btn[data-post-id="${postId}"] .like-count`);
+                if (likeCountElement) {
+                    likeCountElement.textContent = data.totalLikes;
+                }
+
+                // Schimbă stilul butonului în funcție de starea liked/unliked
+                const likeButton = document.querySelector(`.like-btn[data-post-id="${postId}"]`);
+                if (likeButton) {
+                    if (data.isLiked) {
+                        likeButton.classList.remove('btn-outline-primary');
+                        likeButton.classList.add('btn-primary');
+                    } else {
+                        likeButton.classList.remove('btn-primary');
+                        likeButton.classList.add('btn-outline-primary');
+                    }
+                }
+            } else {
+                alert(data.message || 'Error updating reaction');
+            }
+        } catch (error) {
+            console.error('Error:', error);
+            alert('An error occurred. Please try again.');
+        }
+    }
+</script>

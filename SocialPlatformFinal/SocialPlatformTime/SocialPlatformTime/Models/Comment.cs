@@ -13,6 +13,8 @@ namespace SocialPlatformTime.Models
 
         public DateTime Date { get; set; }
 
+        public DateTime? EditedDate { get; set; } // data editarii (nullable)
+
         public int PostId { get; set; } //FK
 
         public string ApplicationUserId { get; set; } //FK
