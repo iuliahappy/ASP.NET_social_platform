@@ -36,8 +36,8 @@
         <div class="card-footer">
             <form asp-controller="Messages" asp-action="New" method="post" class="input-group">
                 <input type="hidden" name="ConversationId" value="@ViewBag.ConversationId" />
-                <input type="text" name="content" class="form-control" placeholder="Write your message here..." required>
-                <button type="submit" class="btn btn-primary">Trimite</button>
+                <input type="text" name="Content" class="form-control" placeholder="Write your message here..." required>
+                <button type="submit" class="btn btn-primary">Send</button>
             </form>
         </div>
     </div>

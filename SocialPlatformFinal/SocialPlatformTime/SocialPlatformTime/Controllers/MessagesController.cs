@@ -13,7 +13,7 @@ namespace SocialPlatformTime.Controllers
         private readonly RoleManager<IdentityRole> _roleManager = roleManager;
 
         [HttpPost]
-        public IActionResult New(Message message)
+        public IActionResult New([Bind("Content,ConversationId")] Message message)
         {
             var currentUserId = _userManager.GetUserId(User);
 
