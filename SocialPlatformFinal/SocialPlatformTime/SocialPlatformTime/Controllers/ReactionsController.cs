@@ -63,13 +63,14 @@ namespace Social_Platform.Controllers
         public IActionResult React(int postId, string reactionType)
         {
             var currentUserId = _userManager.GetUserId(User);
-            if (currentUserId == null) 
-            { 
+            if (currentUserId == null)
+            {
                 return Json(new { success = false, message = "Please log in to react" });
             }
 
             var existingReaction = _db.Reactions
-               .FirstOrDefault(r => r.PostId == postId && r.ApplicationUserId == currentUserId); // Only one Reaction type per User for each Post
+                .AsNoTracking()
+                .FirstOrDefault(r => r.PostId == postId && r.ApplicationUserId == currentUserId);
 
             bool hasReaction;
 
@@ -83,6 +84,7 @@ namespace Social_Platform.Controllers
                 else // Change Reaction Type
                 {
                     existingReaction.ReactionType = reactionType;
+                    _db.Reactions.Update(existingReaction);
                     hasReaction = true;
                 }
             }
@@ -95,7 +97,7 @@ namespace Social_Platform.Controllers
                     ApplicationUserId = currentUserId,
                     ReactionType = reactionType
                 });
-                
+
                 hasReaction = true;
             }
 
@@ -105,10 +107,10 @@ namespace Social_Platform.Controllers
                 .Where(r => r.PostId == postId)
                 .GroupBy(r => r.ReactionType)
                 .Select(g => new
-                    {
-                        ReactionType = g.Key,
-                        Count = g.Count()
-                    })
+                {
+                    ReactionType = g.Key,
+                    Count = g.Count()
+                })
                     .ToList(); // Count of reactions by type 
 
             var allReactionTypes = new[] { "Like", "Love", "Laugh", "Angry" };
@@ -119,5 +121,6 @@ namespace Social_Platform.Controllers
                 hasReaction = hasReaction
             });
         }
+
     }
 }

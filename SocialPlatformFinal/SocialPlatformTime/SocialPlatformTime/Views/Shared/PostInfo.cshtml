@@ -65,8 +65,14 @@
             <!-- User + data -->
             <div class="d-flex justify-content-between mb-3">
                 <div>
-                    <i class="bi bi-person" style="font-size: 1.5rem; color: black;"></i>
-                    @Model.ApplicationUser?.UserName
+                    <a
+                       asp-controller="ApplicationUsers"
+                       asp-action="Show"
+                       asp-route-id="@Model.ApplicationUser.Id">
+                        <i class="bi bi-person" style="font-size: 1.5rem; color: black;"></i>
+                        @Model.ApplicationUser?.UserName
+                    </a>
+
                 </div>
                 <span class="text-muted text-date">@Model.Date</span>
             </div>
@@ -209,10 +215,19 @@
     //         alert('An error occurred. Please try again.');
     //     }
     // }
-    document.querySelectorAll(".reaction-btn").forEach(btn => {
-        btn.addEventListener("click", async function () {
-            const postId = this.dataset.postId;
-            const reactionType = this.dataset.reaction;
+        if (!window.reactionHandlerInitialized) {
+        window.reactionHandlerInitialized = true;
+
+        document.addEventListener("click", async function (e) {
+            const btn = e.target.closest(".reaction-btn");
+            if (!btn) return;
+
+            // lock / unlock resource querySelectorAll prevent concurrency issues
+            if (btn.dataset.locked === "true") return;
+            btn.dataset.locked = "true";
+
+            const postId = btn.dataset.postId;
+            const reactionType = btn.dataset.reaction;
 
             try {
                 const response = await fetch("/Reactions/React", {
@@ -233,7 +248,12 @@
             } catch (err) {
                 console.error(err);
                 alert("Something went wrong");
+            } finally {
+                // unlock after request finishes
+                setTimeout(() => {
+                    btn.dataset.locked = "false";
+                }, 300);
             }
         });
-    });
+    }
 </script>

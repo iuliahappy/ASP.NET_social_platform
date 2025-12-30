@@ -338,9 +338,9 @@ namespace Social_Platform.Controllers
                 .Select(fr => fr.FollowingId)
                 .ToList();
             
-            // Retrieve Posts (and associated reactions / comments) from followed Users sorted by descending date
+            // Retrieve Posts (and associated reactions / comments) from followed Users (and current user) sorted by descending date
             var posts = _db.Posts
-                .Where(p => followedIds.Contains(p.ApplicationUserId))
+                .Where(p => followedIds.Contains(p.ApplicationUserId) || p.ApplicationUserId == currUserId)
                 .Include(p => p.ApplicationUser)
                 .Include(p => p.Reactions)
                 .Include(p => p.Comments)
