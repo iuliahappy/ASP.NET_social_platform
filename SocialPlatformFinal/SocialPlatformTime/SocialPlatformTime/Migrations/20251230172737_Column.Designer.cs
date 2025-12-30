@@ -12,8 +12,8 @@ using SocialPlatformTime.Data;
 namespace SocialPlatformTime.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    [Migration("20251229224033_Starter")]
-    partial class Starter
+    [Migration("20251230172737_Column")]
+    partial class Column
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -342,7 +342,10 @@ namespace SocialPlatformTime.Migrations
             modelBuilder.Entity("SocialPlatformTime.Models.Message", b =>
                 {
                     b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
                         .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
 
                     b.Property<string>("ApplicationUserId")
                         .HasColumnType("nvarchar(450)");
@@ -418,6 +421,10 @@ namespace SocialPlatformTime.Migrations
                     b.Property<int>("PostId")
                         .HasColumnType("int");
 
+                    b.Property<string>("ReactionType")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
                     b.HasKey("Id");
 
                     b.HasIndex("ApplicationUserId");
@@ -464,6 +471,9 @@ namespace SocialPlatformTime.Migrations
 
                     b.Property<int>("ConversationId")
                         .HasColumnType("int");
+
+                    b.Property<DateTime>("LastEntry")
+                        .HasColumnType("datetime2");
 
                     b.Property<string>("UserId")
                         .IsRequired()

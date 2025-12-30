@@ -6,7 +6,7 @@ using Microsoft.EntityFrameworkCore.Migrations;
 namespace SocialPlatformTime.Migrations
 {
     /// <inheritdoc />
-    public partial class Starter : Migration
+    public partial class Mi : Migration
     {
         /// <inheritdoc />
         protected override void Up(MigrationBuilder migrationBuilder)
@@ -304,6 +304,7 @@ namespace SocialPlatformTime.Migrations
                 {
                     Id = table.Column<int>(type: "int", nullable: false)
                         .Annotation("SqlServer:Identity", "1, 1"),
+                    ReactionType = table.Column<string>(type: "nvarchar(max)", nullable: false),
                     ApplicationUserId = table.Column<string>(type: "nvarchar(450)", nullable: false),
                     PostId = table.Column<int>(type: "int", nullable: false)
                 },
@@ -328,7 +329,8 @@ namespace SocialPlatformTime.Migrations
                 name: "Messages",
                 columns: table => new
                 {
-                    Id = table.Column<int>(type: "int", nullable: false),
+                    Id = table.Column<int>(type: "int", nullable: false)
+                        .Annotation("SqlServer:Identity", "1, 1"),
                     ApplicationUserId = table.Column<string>(type: "nvarchar(450)", nullable: false),
                     ConversationId = table.Column<int>(type: "int", nullable: false),
                     Content = table.Column<string>(type: "nvarchar(max)", nullable: false),
