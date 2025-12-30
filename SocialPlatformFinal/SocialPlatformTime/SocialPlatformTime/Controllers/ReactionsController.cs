@@ -58,49 +58,76 @@ namespace Social_Platform.Controllers
         private readonly UserManager<ApplicationUser> _userManager = userManager;
         private readonly RoleManager<IdentityRole> _roleManager = roleManager;
 
+
         [HttpPost]
-        public IActionResult React(int postId)
+        public IActionResult React(int postId, string reactionType)
         {
             var currentUserId = _userManager.GetUserId(User);
-
-            if (currentUserId == null)
-            {
+            if (currentUserId == null) 
+            { 
                 return Json(new { success = false, message = "Please log in to react" });
             }
 
             var existingReaction = _db.Reactions
-                .FirstOrDefault(r => r.PostId == postId && r.ApplicationUserId == currentUserId);
+               .FirstOrDefault(r => r.PostId == postId && r.ApplicationUserId == currentUserId); // Only one Reaction type per User for each Post
 
-            bool isLiked;
+            bool hasReaction;
 
             if (existingReaction != null)
             {
-                // Șterge reacția (unlike)
-                _db.Reactions.Remove(existingReaction);
-                isLiked = false;
+                if (existingReaction.ReactionType == reactionType) // Same reactionn -> untoggle it
+                {
+                    _db.Reactions.Remove(existingReaction);
+                    hasReaction = false;
+                }
+                else // Change Reaction Type
+                {
+                    existingReaction.ReactionType = reactionType;
+                    hasReaction = true;
+                }
             }
             else
             {
-                // Adaugă reacția (like)
-                var reaction = new Reaction
+                // First Reaction
+                _db.Reactions.Add(new Reaction
                 {
                     PostId = postId,
-                    ApplicationUserId = currentUserId
-                };
-                _db.Reactions.Add(reaction);
-                isLiked = true;
+                    ApplicationUserId = currentUserId,
+                    ReactionType = reactionType
+                });
+                
+                hasReaction = true;
             }
 
             _db.SaveChanges();
 
-            // Numără totalul de like-uri pentru acest post
-            var totalLikes = _db.Reactions.Count(r => r.PostId == postId);
+            var reactionCounts = _db.Reactions
+                .Where(r => r.PostId == postId)
+                .GroupBy(r => r.ReactionType)
+                .Select(g => new
+                    {
+                        ReactionType = g.Key,
+                        Count = g.Count()
+                    })
+                    .ToList(); // Count of reactions by type 
+
+            var allReactionTypes = new[] { "Like", "Love", "Laugh", "Angry" };
+
+            //var reactionSummary = allReactionTypes
+            //    .Select(type => new
+            //    {
+            //        ReactionType = type,
+            //        Count = reactionCounts
+            //            .FirstOrDefault(r => r.ReactionType == type)?.Count ?? 0
+            //    });
+
+            //// Numără totalul de like-uri pentru acest post
+            //var totalLikes = _db.Reactions.Count(r => r.PostId == postId);
 
             return Json(new
             {
                 success = true,
-                isLiked = isLiked,
-                totalLikes = totalLikes
+                hasReaction = hasReaction
             });
         }
     }

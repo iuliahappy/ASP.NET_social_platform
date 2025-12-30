@@ -43,6 +43,20 @@
 
 
 @model SocialPlatformTime.Models.Post
+@using Microsoft.AspNetCore.Identity
+@inject UserManager<ApplicationUser> UserManager
+
+@{
+    var userId = UserManager.GetUserId(User);
+
+    var reactionCounts = Model.Reactions
+        .GroupBy(r => r.ReactionType)
+        .ToDictionary(g => g.Key, g => g.Count());
+
+    var userReaction = Model.Reactions
+        .FirstOrDefault(r => r.ApplicationUserId == userId)
+        ?.ReactionType;
+}
 
 <div class="d-flex justify-content-center mt-4">
     <div class="card w-100" style="max-width: 800px;">
@@ -88,23 +102,65 @@
             @* --- SECȚIUNEA DE REACȚII ȘI COMENTARII --- *@
 
             <div class="d-flex gap-2 mt-4">
-                <button type="button"
+                @* <button type="button"
                         class="btn btn-outline-primary like-btn"
                         data-post-id="@Model.Id"
                         onclick="toggleLike(@Model.Id)">
                     👍 <span class="like-count">@Model.Reactions.Count</span> Likes
                 </button>
+                 *@
+                @* Reactii de tipuri diferite *@
+                <div class="d-flex gap-2 mt-4 align-items-center">
+                    <button type="button"
+                            class="btn reaction-btn @(userReaction == "Like" ? "btn-primary" : "btn-outline-primary")"
+                            data-post-id="@Model.Id"
+                            data-reaction="Like">
+                        👍 <span>@(reactionCounts.ContainsKey("Like") ? reactionCounts["Like"] : 0)</span>
 
-                <a class="btn btn-success" asp-controller="Comments" asp-action="Index" asp-route-id="@Model.Id">
-                    Comments
-                </a>
+                    </button>
 
-                <a class="btn btn-success rounded-pill px-4 shadow-sm ms-auto"
-                   asp-controller="Posts"
-                   asp-action="Show"
-                   asp-route-id="@Model.Id">
-                    <i class="bi bi-eye me-1"></i> Show Post
-                </a>
+                    <button type="button"
+                            class="btn reaction-btn @(userReaction == "Love" ? "btn-danger" : "btn-outline-danger")"
+                            data-post-id="@Model.Id"
+                            data-reaction="Love">
+                        ❤️ <span>@(reactionCounts.ContainsKey("Love") ? reactionCounts["Love"] : 0)</span>
+
+                    </button>
+
+                    <button type="button"
+                            class="btn reaction-btn @(userReaction == "Laugh" ? "btn-warning" : "btn-outline-warning")"
+                            data-post-id="@Model.Id"
+                            data-reaction="Laugh">
+                        😂 <span>@(reactionCounts.ContainsKey("Laugh") ? reactionCounts["Laugh"] : 0)</span>
+
+                    </button>
+
+                    <button type="button"
+                            class="btn reaction-btn @(userReaction == "Angry" ? "btn-dark" : "btn-outline-dark")"
+                            data-post-id="@Model.Id"
+                            data-reaction="Angry">
+                        😡 <span>@(reactionCounts.ContainsKey("Angry") ? reactionCounts["Angry"] : 0)</span>
+                        @* @if (userReaction == "Angry")
+                        {
+                            <small>You</small>
+                        } -- 'You liked this' type of note *@ 
+                    </button>
+
+                    <a class="btn btn-success ms-2"
+                       asp-controller="Comments"
+                       asp-action="Index"
+                       asp-route-id="@Model.Id">
+                        Comments
+                    </a>
+
+                    <a class="btn btn-success rounded-pill px-4 shadow-sm ms-auto"
+                       asp-controller="Posts"
+                       asp-action="Show"
+                       asp-route-id="@Model.Id">
+                        <i class="bi bi-eye me-1"></i> Show Post
+                    </a>
+                </div>
+
             </div>
 
         </div>
@@ -112,45 +168,72 @@
 </div>
 
 <script>
-    async function toggleLike(postId) {
-        try {
-            const response = await fetch('/Reactions/React?postId=' + postId, {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                }
-            });
+    // async function toggleLike(postId) {
+    //     try {
+    //         const response = await fetch('/Reactions/React?postId=' + postId, {
+    //             method: 'POST',
+    //             headers: {
+    //                 'Content-Type': 'application/json',
+    //             }
+    //         });
 
-            if (!response.ok) {
-                throw new Error('Network response was not ok');
+    //         if (!response.ok) {
+    //             throw new Error('Network response was not ok');
+    //         }
+
+    //         const data = await response.json();
+
+    //         if (data.success) {
+    //             Actualizează numărul de like-uri
+    //             const likeCountElement = document.querySelector(`.like-btn[data-post-id="${postId}"] .like-count`);
+    //             if (likeCountElement) {
+    //                 likeCountElement.textContent = data.totalLikes;
+    //             }
+
+    //             Schimbă stilul butonului în funcție de starea liked/unliked
+    //             const likeButton = document.querySelector(`.like-btn[data-post-id="${postId}"]`);
+    //             if (likeButton) {
+    //                 if (data.isLiked) {
+    //                     likeButton.classList.remove('btn-outline-primary');
+    //                     likeButton.classList.add('btn-primary');
+    //                 } else {
+    //                     likeButton.classList.remove('btn-primary');
+    //                     likeButton.classList.add('btn-outline-primary');
+    //                 }
+    //             }
+    //         } else {
+    //             alert(data.message || 'Error updating reaction');
+    //         }
+    //     } catch (error) {
+    //         console.error('Error:', error);
+    //         alert('An error occurred. Please try again.');
+    //     }
+    // }
+    document.querySelectorAll(".reaction-btn").forEach(btn => {
+        btn.addEventListener("click", async function () {
+            const postId = this.dataset.postId;
+            const reactionType = this.dataset.reaction;
+
+            try {
+                const response = await fetch("/Reactions/React", {
+                    method: "POST",
+                    headers: {
+                        "Content-Type": "application/x-www-form-urlencoded"
+                    },
+                    body: `postId=${postId}&reactionType=${reactionType}`
+                });
+
+                const data = await response.json();
+
+                if (data.success) {
+                    location.reload(); // simplest + safest for partial reuse
+                } else {
+                    alert(data.message || "Error reacting");
+                }
+            } catch (err) {
+                console.error(err);
+                alert("Something went wrong");
             }
-
-            const data = await response.json();
-
-            if (data.success) {
-                // Actualizează numărul de like-uri
-                const likeCountElement = document.querySelector(`.like-btn[data-post-id="${postId}"] .like-count`);
-                if (likeCountElement) {
-                    likeCountElement.textContent = data.totalLikes;
-                }
-
-                // Schimbă stilul butonului în funcție de starea liked/unliked
-                const likeButton = document.querySelector(`.like-btn[data-post-id="${postId}"]`);
-                if (likeButton) {
-                    if (data.isLiked) {
-                        likeButton.classList.remove('btn-outline-primary');
-                        likeButton.classList.add('btn-primary');
-                    } else {
-                        likeButton.classList.remove('btn-primary');
-                        likeButton.classList.add('btn-outline-primary');
-                    }
-                }
-            } else {
-                alert(data.message || 'Error updating reaction');
-            }
-        } catch (error) {
-            console.error('Error:', error);
-            alert('An error occurred. Please try again.');
-        }
-    }
+        });
+    });
 </script>

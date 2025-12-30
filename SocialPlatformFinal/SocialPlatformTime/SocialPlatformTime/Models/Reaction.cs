@@ -9,6 +9,8 @@ namespace SocialPlatformTime.Models
 
         //public int ReactionCode { get; set; } //@ The code of the specific emoji
         //@ I think we can replace the code with the emoji in the view
+        [Required]
+        public string ReactionType { get; set; } = "Like"; // Default is Like to satisfy 'Required' condition
 
         public string ApplicationUserId { get; set; } // FK
 

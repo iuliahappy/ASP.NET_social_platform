@@ -194,65 +194,65 @@ namespace SocialPlatformTime.Controllers
             return RedirectToAction("Index");
         }
 
-        // Login procedure (get request)
-        [AllowAnonymous]
-        public IActionResult Login()
-        {
-            return View();
-        }
+        //// Login procedure (get request)
+        //[AllowAnonymous]
+        //public IActionResult Login()
+        //{
+        //    return View();
+        //}
 
-        // Login procedure (post request)
-        [HttpPost]
-        [AllowAnonymous]
-        public async Task<IActionResult> Login(string email, string password)
-        {
-            var result = await _signInManager.PasswordSignInAsync(email, password, false, false);
-            if (result.Succeeded)
-                return RedirectToAction("Index", "Home");
+        //// Login procedure (post request)
+        //[HttpPost]
+        //[AllowAnonymous]
+        //public async Task<IActionResult> Login(string email, string password)
+        //{
+        //    var result = await _signInManager.PasswordSignInAsync(email, password, false, false);
+        //    if (result.Succeeded)
+        //        return RedirectToAction("Index", "Home");
 
-            ModelState.AddModelError("", "Invalid login attempt");
-            return View();
-        }
+        //    ModelState.AddModelError("", "Invalid login attempt");
+        //    return View();
+        //}
 
-        // Logout procdure (post only)
-        [HttpPost]
-        [AllowAnonymous]
-        public async Task<IActionResult> Logout()
-        {
-            await _signInManager.SignOutAsync();
-            return RedirectToAction("Login");
-        }
+        //// Logout procdure (post only)
+        //[HttpPost]
+        //[AllowAnonymous]
+        //public async Task<IActionResult> Logout()
+        //{
+        //    await _signInManager.SignOutAsync();
+        //    return RedirectToAction("Login");
+        //}
 
-        // Password Change (get request)
-        [AllowAnonymous]
-        public IActionResult ChangePassword()
-        {
-            return View();
-        }
+        //// Password Change (get request)
+        //[AllowAnonymous]
+        //public IActionResult ChangePassword()
+        //{
+        //    return View();
+        //}
 
-        // Password Change (post request)
-        [HttpPost]
-        [AllowAnonymous]
-        public async Task<IActionResult> ChangePassword(string id, string newPassword)
-        {
-            var user = await _userManager.FindByIdAsync(id);
-            if (user == null) return NotFound();
+        //// Password Change (post request)
+        //[HttpPost]
+        //[AllowAnonymous]
+        //public async Task<IActionResult> ChangePassword(string id, string newPassword)
+        //{
+        //    var user = await _userManager.FindByIdAsync(id);
+        //    if (user == null) return NotFound();
 
-            var token = await _userManager.GeneratePasswordResetTokenAsync(user);
-            var result = await _userManager.ResetPasswordAsync(user, token, newPassword);
+        //    var token = await _userManager.GeneratePasswordResetTokenAsync(user);
+        //    var result = await _userManager.ResetPasswordAsync(user, token, newPassword);
 
-            if (result.Succeeded)
-            {
-                TempData["message"] = "Password changed successfully!";
-                TempData["messageType"] = "alert-success";
-            }
-            else
-            {
-                foreach (var error in result.Errors)
-                    ModelState.AddModelError("", error.Description);
-            }
+        //    if (result.Succeeded)
+        //    {
+        //        TempData["message"] = "Password changed successfully!";
+        //        TempData["messageType"] = "alert-success";
+        //    }
+        //    else
+        //    {
+        //        foreach (var error in result.Errors)
+        //            ModelState.AddModelError("", error.Description);
+        //    }
 
-            return RedirectToAction("Edit", new { id });
-        }
+        //    return RedirectToAction("Edit", new { id });
+        //}
     }
 }
