@@ -326,5 +326,28 @@ namespace Social_Platform.Controllers
             // Un flag general pentru a ști dacă userul este măcar logat
             ViewBag.EsteLogat = User.Identity.IsAuthenticated;
         }
+
+        [Authorize]
+        public IActionResult Feed()
+        { 
+            var currUserId = _userManager.GetUserId(User);
+
+            // Retrieve Followed User Ids
+            var followedIds = _db.FollowRequests
+                .Where(fr => fr.FollowerId == currUserId && fr.Status == "accepted")
+                .Select(fr => fr.FollowingId)
+                .ToList();
+            
+            // Retrieve Posts (and associated reactions / comments) from followed Users sorted by descending date
+            var posts = _db.Posts
+                .Where(p => followedIds.Contains(p.ApplicationUserId))
+                .Include(p => p.ApplicationUser)
+                .Include(p => p.Reactions)
+                .Include(p => p.Comments)
+                .OrderByDescending(p => p.Date)
+                .ToList();
+
+            return View(posts);
+        }
     }
 }

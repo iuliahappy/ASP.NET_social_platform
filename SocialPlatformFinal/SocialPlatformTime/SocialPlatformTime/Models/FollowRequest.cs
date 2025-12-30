@@ -6,7 +6,7 @@ namespace SocialPlatformTime.Models
     public class FollowRequest
     {
         public int Id { get; set; }
-        public string Status { get; set; }
+        public string Status { get; set; } // "pending" "accepted" "rejected"
 
         public string FollowerId { get; set; } // User who sent the follow request //FK
 

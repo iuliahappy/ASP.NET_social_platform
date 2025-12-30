@@ -113,17 +113,6 @@ namespace Social_Platform.Controllers
 
             var allReactionTypes = new[] { "Like", "Love", "Laugh", "Angry" };
 
-            //var reactionSummary = allReactionTypes
-            //    .Select(type => new
-            //    {
-            //        ReactionType = type,
-            //        Count = reactionCounts
-            //            .FirstOrDefault(r => r.ReactionType == type)?.Count ?? 0
-            //    });
-
-            //// Numără totalul de like-uri pentru acest post
-            //var totalLikes = _db.Reactions.Count(r => r.PostId == postId);
-
             return Json(new
             {
                 success = true,

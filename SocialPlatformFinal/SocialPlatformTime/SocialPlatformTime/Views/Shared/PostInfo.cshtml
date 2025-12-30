@@ -226,7 +226,7 @@
                 const data = await response.json();
 
                 if (data.success) {
-                    location.reload(); // simplest + safest for partial reuse
+                    location.reload();
                 } else {
                     alert(data.message || "Error reacting");
                 }

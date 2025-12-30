@@ -1,0 +1,15 @@
+﻿@model List<SocialPlatformTime.Models.Post>
+
+<h2>Your Feed</h2>
+
+@if (!Model.Any())
+{
+    <p>No posts yet. Follow users to see personalized content.</p>
+}
+else
+{
+    foreach (var post in Model)
+    {
+        <partial name="PostInfo" model="post" />
+    }
+}
