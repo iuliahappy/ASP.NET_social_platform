@@ -5,11 +5,11 @@ using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.EntityFrameworkCore;
 using SocialPlatformTime.Data;
 using SocialPlatformTime.Models;
+using System.Threading.Tasks;
 
 namespace SocialPlatformTime.Controllers
 {
-    // Only App Admins are allowed to perform CRUD operations on Users
-    [Authorize(Roles = "Administrator")]
+    [Authorize(Roles = "Registered_User,Administrator")]
     public class ApplicationUsersController(
         ApplicationDbContext context,
         UserManager<ApplicationUser> userManager,
@@ -25,6 +25,7 @@ namespace SocialPlatformTime.Controllers
         private readonly SignInManager<ApplicationUser> _signInManager = signInManager;
         private readonly RoleManager<IdentityRole> _roleManager = roleManager;
 
+        [Authorize(Roles = "Administrator")]
         // Display all users
         public IActionResult Index()
         {
@@ -42,19 +43,46 @@ namespace SocialPlatformTime.Controllers
         }
 
         // Display only user profile by requested id 
-        public IActionResult Show(string id)
+        public async Task<IActionResult> Show(string id)
         {
-            var user = _db.Users.Find(id);
+            var currUserId = _userManager.GetUserId(User);
+            var userWithPosts = await _userManager.Users
+                 .Include(u => u.Posts)
+                 .ThenInclude(p => p.Reactions)
+                 .FirstOrDefaultAsync(u => u.Id == id);
 
-            if (user == null)
-            {
+            if (userWithPosts == null)
                 return NotFound();
+
+            bool following = false; // whether they are following the current user
+            bool followed = false; // whether the current user follows them
+
+            // Admin users cannot be Followed or Follow Other Users
+            bool isEitherUserAdmin = User.IsInRole("Administrator") || await _userManager.IsInRoleAsync(userWithPosts, "Administrator");
+
+            if (!isEitherUserAdmin)
+            { 
+                following = _db.FollowRequests.Any(fr =>
+                    fr.FollowerId == currUserId &&
+                    fr.FollowingId == id &&
+                    fr.Status == "accepted");
+
+                followed = _db.FollowRequests.Any(fr =>
+                    fr.FollowerId == id &&
+                    fr.FollowingId == currUserId &&
+                    fr.Status == "accepted");
             }
 
-            ViewBag.User = user;
+            ViewBag.User = userWithPosts;
+            ViewBag.IFollow = following;
+            ViewBag.FollowsMe = followed;
+            ViewBag.IsCurrentUser = currUserId == id;
+            ViewBag.ShowFollowSystem = !isEitherUserAdmin;
+
             return View();
         }
-
+        
+        [Authorize(Roles = "Administrator")]
         // Create User (get request)
         public IActionResult Create()
         {
@@ -68,6 +96,7 @@ namespace SocialPlatformTime.Controllers
             return View();
         }
 
+        [Authorize(Roles = "Administrator")]
         // Create User (post request)
         [HttpPost]
         public async Task<IActionResult> Create(ApplicationUser newUser, string selectedRole, string password)
@@ -118,41 +147,71 @@ namespace SocialPlatformTime.Controllers
             var user = await _userManager.FindByIdAsync(id);
             if (user == null) return NotFound();
 
-            var roles = await _roleManager.Roles.ToListAsync(); // Load roles first 
-
-            var roleItems = new List<SelectListItem>();
-            foreach (var role in roles)
-            {
-                bool isInRole = await _userManager.IsInRoleAsync(user, role.Name);
-                roleItems.Add(new SelectListItem
+            ViewBag.CanChangeRole = false;
+            if (id != _userManager.GetUserId(User)) // Not Admin and not editing own profile -> invalid
+                if (!User.IsInRole("Administrator"))
+                    return Forbid();
+                else
                 {
-                    Text = role.Name,
-                    Value = role.Name,
-                    Selected = isInRole
-                });
-            }
+                    var roles = await _roleManager.Roles.ToListAsync(); // Load roles first 
 
-            ViewBag.Roles = roleItems;
+                    var roleItems = new List<SelectListItem>();
+                    foreach (var role in roles)
+                    {
+                        bool isInRole = await _userManager.IsInRoleAsync(user, role.Name);
+                        roleItems.Add(new SelectListItem
+                        {
+                            Text = role.Name,
+                            Value = role.Name,
+                            Selected = isInRole
+                        });
+                    }
 
+                    ViewBag.CanChangeRole = true;
+                    ViewBag.Roles = roleItems;
+                }
+            ViewBag.CurrentRole = _userManager.GetRolesAsync(user).Result.FirstOrDefault(); 
             return View(user);
         }
 
         // Edit user (post request)
         [HttpPost]
+        [ValidateAntiForgeryToken]
         public async Task<IActionResult> Edit(string id, ApplicationUser updatedUser, string selectedRole)
         {
             var user = await _userManager.FindByIdAsync(id);
             if (user == null) return NotFound();
+            if (id != _userManager.GetUserId(User)) return Forbid();
+
+            ViewBag.CanChangeRole = false;
+            Console.WriteLine("MEOWWWW");
 
             if (!ModelState.IsValid)
             {
-                ViewBag.Roles = _roleManager.Roles.Select(r => new SelectListItem
+                Console.WriteLine(" Invalid MEOWWWW");
+
+                if (User.IsInRole("Administrator"))
                 {
-                    Text = r.Name,
-                    Value = r.Name
-                }).ToList();
+                    var roles = await _roleManager.Roles.ToListAsync(); // Load roles first 
+
+                    var roleItems = new List<SelectListItem>();
+                    foreach (var role in roles)
+                    {
+                        bool isInRole = await _userManager.IsInRoleAsync(user, role.Name);
+                        roleItems.Add(new SelectListItem
+                        {
+                            Text = role.Name,
+                            Value = role.Name,
+                            Selected = isInRole
+                        });
+                    }
+
+                    ViewBag.CanChangeRole = true;
+                    ViewBag.Roles = roleItems;
+                }
                 return View(updatedUser);
             }
+            Console.WriteLine("MEOWWWW");
 
             // Update user details
             user.UserName = updatedUser.UserName;
@@ -160,15 +219,38 @@ namespace SocialPlatformTime.Controllers
             user.FirstName = updatedUser.FirstName;
             user.LastName = updatedUser.LastName;
             user.PhoneNumber = updatedUser.PhoneNumber;
+            user.ProfileDescription = updatedUser.ProfileDescription;
+
+            Console.WriteLine("Right before Image");
+            if (updatedUser.ImageFile != null)
+            {
+                Console.WriteLine("After first if condition");
+
+                var fileName = Guid.NewGuid() + Path.GetExtension(updatedUser.ImageFile.FileName);
+                var filePath = Path.Combine("wwwroot/images/userProfileImages", fileName);
+                Console.WriteLine("After variable initialization");
+
+                using (var stream = new FileStream(filePath, FileMode.Create))
+                {
+                    await updatedUser.ImageFile.CopyToAsync(stream);
+                }
+                Console.WriteLine("After copying image");
+
+                user.Image = "/images/userProfileImages/" + fileName;
+            }
 
             await _userManager.UpdateAsync(user);
+            Console.WriteLine("After updating user profile");
 
-            // Update role
-            var userRoles = await _userManager.GetRolesAsync(user);
-            if (!string.IsNullOrEmpty(selectedRole))
+            // Update role if admin
+            if (User.IsInRole("Administrator"))
             {
-                await _userManager.RemoveFromRolesAsync(user, userRoles);
-                await _userManager.AddToRoleAsync(user, selectedRole);
+                var userRoles = await _userManager.GetRolesAsync(user);
+                if (!string.IsNullOrEmpty(selectedRole))
+                {
+                    await _userManager.RemoveFromRolesAsync(user, userRoles);
+                    await _userManager.AddToRoleAsync(user, selectedRole);
+                }
             }
 
             TempData["message"] = "User profile updated!";
@@ -178,6 +260,7 @@ namespace SocialPlatformTime.Controllers
         }
 
         // Delete user (post request)
+        [Authorize(Roles = "Administrator")]
         [HttpPost]
         public async Task<IActionResult> Delete(string id)
         {
@@ -188,7 +271,7 @@ namespace SocialPlatformTime.Controllers
             // Delete 
             await _userManager.DeleteAsync(user);
 
-            // Confirm succesful deletion
+            // Confirm successful deletion
             TempData["message"] = "User deleted successfully!";
             TempData["messageType"] = "alert-success";
             return RedirectToAction("Index");

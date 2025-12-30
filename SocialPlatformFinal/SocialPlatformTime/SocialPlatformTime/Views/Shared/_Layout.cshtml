@@ -1,4 +1,7 @@
 ﻿<!DOCTYPE html>
+@using Microsoft.AspNetCore.Identity
+@inject UserManager<SocialPlatformTime.Models.ApplicationUser> UserManager
+
 <html lang="en">
 <head>
     <meta charset="utf-8" />
@@ -157,8 +160,10 @@
                             <a class="nav-link" asp-controller="Posts" asp-action="Index">Show Posts</a>
                         </li>
 
+
                         @if (User.Identity.IsAuthenticated)
                         {
+                            var currentUserId = UserManager.GetUserId(User);
                             <li class="nav-item">
                                 <a class="nav-link" asp-controller="Posts" asp-action="New">Add Post</a>
                             </li>
@@ -170,6 +175,17 @@
                             {
                                 <li class="nav-item">
                                     <a class="nav-link fw-bold text-primary" asp-controller="ApplicationUsers" asp-action="Index">Manage Users</a>
+                                </li>
+                            }
+                            else
+                            {
+                                <li class="nav-item">
+                                    <a class="nav-link fw-bold text-primary"
+                                       asp-controller="ApplicationUsers"
+                                       asp-action="Show"
+                                       asp-route-id="@currentUserId">
+                                        My Profile
+                                    </a>
                                 </li>
                             }
                         }

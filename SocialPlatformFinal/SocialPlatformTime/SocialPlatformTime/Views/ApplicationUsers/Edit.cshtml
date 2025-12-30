@@ -1,7 +1,15 @@
 @model SocialPlatformTime.Models.ApplicationUser
+@{
+    ViewData["Title"] = "User Profile Modifications";
+    bool canChangeRole = ViewBag.CanChangeRole;
+    List<SelectListItem> userRoles = ViewBag.Roles;
+    string currentRole = ViewBag.CurrentRole;
+}
+
 
 <h3>Edit User</h3>
-<form asp-action="Edit" method="post">
+<form asp-action="Edit" method="post" enctype="multipart/form-data">
+    @Html.AntiForgeryToken()
     <input type="hidden" asp-for="Id" />
     <label>User Name</label>
     <input asp-for="UserName" class="form-control" />
@@ -13,13 +21,25 @@
     <input asp-for="LastName" class="form-control" />
     <label>Phone Number</label>
     <input asp-for="PhoneNumber" class="form-control" />
-    <label>Role</label>
-    <select name="selectedRole" class="form-control">
-        @foreach (var role in ViewBag.Roles as List<SelectListItem>)
-        {
-            <option value="@role.Value" selected="@role.Selected">@role.Text</option>
-        }
-    </select>
-    <br />
+    <label>Description</label>
+    <textarea asp-for="ProfileDescription" class="form-control"></textarea>
+    <label>Profile Image</label>
+    <input asp-for="ImageFile" type="file" class="form-control" />
+    @if (canChangeRole)
+    { 
+        <label>Role</label>
+        <select name="selectedRole" class="form-control">
+            @foreach (var role in userRoles)
+            {
+                <option value="@role.Value" selected="@role.Selected">@role.Text</option>
+            }
+        </select>
+    }
+    else
+    {   
+        <!-- Current role is included as hidden input so POST can access it for non-admin users -->
+        <input type="hidden" name="selectedRole" value="@currentRole" />
+    }
+   <br />
     <button type="submit" class="btn btn-success">Update User</button>
 </form>

@@ -21,6 +21,18 @@
             <option value="@role.Value">@role.Text</option>
         }
     </select>
+    <div class="mb-3">
+        <label asp-for="ProfileDescription" class="form-label fw-bold">
+            Text Content
+        </label>
+        <textarea asp-for="ProfileDescription" class="form-control" rows="6"
+                  placeholder="Add a profile description"></textarea>
+    </div>
+    <div class="mb-3">
+        <label asp-for="ImageFile" class="form-label fw-bold">Upload image</label>
+        <input asp-for="ImageFile" type="file" class="form-control" accept="image/*" />
+        <small class="form-text text-muted text-image-video">Select a photo from your computer.</small>
+    </div>
     <br />
     <button type="submit" class="btn btn-success">Create User</button>
 </form>

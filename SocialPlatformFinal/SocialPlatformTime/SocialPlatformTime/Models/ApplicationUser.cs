@@ -24,6 +24,12 @@ namespace SocialPlatformTime.Models
         public string? FirstName { get; set; }
         public string? LastName { get; set; }
 
+        public string? ProfileDescription { get; set; }
+
+        public string? Image { get; set; } 
+        [NotMapped]
+        public IFormFile? ImageFile { get; set; }
+
         // variabila in care vom retine rolurile existente in baza de date
         // pentru popularea unui dropdown list
         [NotMapped]

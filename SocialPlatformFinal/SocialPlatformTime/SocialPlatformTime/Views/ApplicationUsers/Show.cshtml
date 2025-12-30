@@ -1,13 +1,111 @@
+@* @using System.Linq *@
+
 @{
     ViewData["Title"] = "User Profile";
     var user = ViewBag.User;
+    bool iFollow = ViewBag.IFollow;
+    bool followsMe = ViewBag.FollowsMe;
+    bool isCurrentUser = ViewBag.IsCurrentUser;
 }
 
-<h2>@user.UserName</h2>
+<div class="card mb-4">
+    <div class="card-body">
+        <h2>@user.UserName</h2>
 
-<p >Email:  @user.Email</p>
-<p> First Name:  @user.FirstName</p>
-<p> Last Name:  @user.LastName</p>
-<p> Phone:  @user.PhoneNumber</p>
+        <p><strong>Email:</strong> @user.Email</p>
+        <p><strong>First Name:</strong> @user.FirstName</p>
+        <p><strong>Last Name:</strong> @user.LastName</p>
+        <p><strong>Phone:</strong> @user.PhoneNumber</p>
+        @if (!string.IsNullOrEmpty(user.Image))
+        {
+            <img src="@user.Image"
+                 class="rounded-circle mb-3"
+                 style="width:150px;height:150px;object-fit:cover;" />
+        }
 
-<a href="/ApplicationUsers/Edit/@user.Id">Edit Profile</a>
+        @if (!string.IsNullOrEmpty(user.ProfileDescription))
+        {
+            <p class="mt-3">@user.ProfileDescription</p>
+        }
+        @if (!isCurrentUser)
+        {
+            <form method="post"
+                  asp-action="ToggleFollow"
+                  asp-route-id="@user.Id">
+                <button class="btn @(iFollow ? "btn-outline-danger" : "btn-primary")">
+                    @(iFollow ? "Unfollow" : "Follow")
+                </button>
+            </form>
+
+            <div class="mt-2">
+                @if (iFollow && followsMe)
+                {
+                    <span class="badge bg-success">Mutual following</span>
+                }
+                else if (iFollow)
+                {
+                    <span class="badge bg-primary">You follow this user</span>
+                }
+                else if (followsMe)
+                {
+                    <span class="badge bg-secondary">Follows you</span>
+                }
+            </div>
+        }
+        else
+        {
+            <a class="btn btn-outline-secondary"
+               asp-action="Edit"
+               asp-route-id="@user.Id">
+                Edit Profile
+            </a>
+            <a class="btn btn-outline-primary"
+               asp-controller="Posts"
+                asp-action="New">
+                New Post
+            </a>
+        }
+    </div>
+</div>
+
+<hr />
+
+<h3>@user.UserName's Posts</h3>
+
+@if (user.Posts == null || user.Posts.Count == 0)
+{
+    <p>No posts yet.</p>
+}
+else
+{
+    foreach (var post in user.Posts)
+    {
+        <partial name="PostInfo" model="post" />
+    }
+}
+
+@if (ViewBag.ShowFollowSystem && !isCurrentUser)
+{
+    <form method="post"
+          asp-action="ToggleFollow"
+          asp-route-id="@user.Id">
+        <button class="btn @(iFollow ? "btn-outline-danger" : "btn-primary")">
+            @(iFollow ? "Unfollow" : "Follow")
+        </button>
+    </form>
+
+    <div class="mt-2">
+        @if (iFollow && followsMe)
+        {
+            <span class="badge bg-success">Mutual following</span>
+        }
+        else if (iFollow)
+        {
+            <span class="badge bg-primary">You follow this user</span>
+        }
+        else if (followsMe)
+        {
+            <span class="badge bg-secondary">Follows you</span>
+        }
+    </div>
+}
