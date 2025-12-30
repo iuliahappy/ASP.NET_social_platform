@@ -26,18 +26,66 @@ namespace SocialPlatformTime.Controllers
             return View(conversations);
         }
 
+        //public IActionResult Show(int id)
+        //{
+        //    var currentUserId = _userManager.GetUserId(User);
+
+        //    var messages = _db.Messages
+        //                        .Include(m => m.ApplicationUser) 
+        //                        .Where(m => m.ConversationId == id)
+        //                        .Where(m => m.Conversation.UserConversations.Any(uc => uc.UserId == currentUserId))
+        //                        .OrderBy(m => m.dateTime)
+        //                        .ToList();
+
+        //    //To put a different color to the user loged
+        //    ViewBag.CurrentUserId = currentUserId;
+        //    ViewBag.ConversationId = id;
+
+        //    return View(messages);
+        //}
+
         public IActionResult Show(int id)
         {
             var currentUserId = _userManager.GetUserId(User);
 
+            // Update LastEntry
+            var userEntry = _db.UserConversations
+                               .FirstOrDefault(uc => uc.ConversationId == id && uc.UserId == currentUserId);
+
+            if (userEntry != null)
+            {
+                userEntry.LastEntry = DateTime.Now;
+                _db.SaveChanges();
+            }
+
+            // Extract the messages of the conversation
             var messages = _db.Messages
-                                .Include(m => m.ApplicationUser) 
+                                .Include(m => m.ApplicationUser)
                                 .Where(m => m.ConversationId == id)
                                 .Where(m => m.Conversation.UserConversations.Any(uc => uc.UserId == currentUserId))
                                 .OrderBy(m => m.dateTime)
                                 .ToList();
 
-            //To put a different color to the user loged
+            // Update the "seen"
+            var otherUsersLastEntries = _db.UserConversations
+                                            .Where(uc => uc.ConversationId == id && uc.UserId != currentUserId)
+                                            .Select(uc => uc.LastEntry)
+                                            .ToList();
+
+            foreach (var msg in messages)
+            {
+                if (otherUsersLastEntries.Any() && otherUsersLastEntries.All(le => le >= msg.dateTime))
+                {
+                    msg.IsRead = true;
+                }
+                else
+                {
+                    msg.IsRead = false;
+                }
+            }
+
+            _db.SaveChanges();
+
             ViewBag.CurrentUserId = currentUserId;
             ViewBag.ConversationId = id;
 
