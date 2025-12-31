@@ -18,7 +18,7 @@ namespace SocialPlatformTime.Controllers
             var currentUserId = _userManager.GetUserId(User);
 
             var permitted = _db.UserConversations
-                               .Any(uc => uc.ConversationId == message.ConversationId && uc.UserId == currentUserId);
+                               .Any(uc => uc.ConversationId == message.ConversationId && uc.ApplicationUserId == currentUserId);
 
             if (permitted)
             {

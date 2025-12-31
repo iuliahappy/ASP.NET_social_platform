@@ -29,6 +29,21 @@ namespace Social_Platform.Controllers
             // ViewBag.OriceDenumireSugestiva
             ViewBag.Posts = posts;
 
+            // Obține lista de postări salvate pentru utilizatorul curent
+            if (User.Identity?.IsAuthenticated == true)
+            {
+                var currentUserId = _userManager.GetUserId(User);
+                var savedPostIds = _db.SavedPosts
+                    .Where(sp => sp.ApplicationUserId == currentUserId)
+                    .Select(sp => sp.PostId)
+                    .ToList();
+                ViewBag.SavedPostIds = savedPostIds;
+            }
+            else
+            {
+                ViewBag.SavedPostIds = new List<int>(); // IMPORTANT: setează lista goală
+            }
+
             if (TempData.ContainsKey("message"))
             {
                 ViewBag.Message = TempData["message"];
@@ -58,6 +73,30 @@ namespace Social_Platform.Controllers
             }
 
             SetAccessRights();
+
+            //// Verifică dacă utilizatorul curent a salvat această postare
+            //if (User.Identity?.IsAuthenticated == true)
+            //{
+            //    var currentUserId = _userManager.GetUserId(User);
+            //    var isSaved = _db.SavedPosts
+            //        .Any(sp => sp.PostId == id && sp.ApplicationUserId == currentUserId);
+            //    ViewBag.IsSaved = isSaved;
+            //}
+
+            // Setează SavedPostIds pentru utilizatorul curent
+            if (User.Identity?.IsAuthenticated == true)
+            {
+                var currentUserId = _userManager.GetUserId(User);
+                var savedPostIds = _db.SavedPosts
+                    .Where(sp => sp.ApplicationUserId == currentUserId)
+                    .Select(sp => sp.PostId)
+                    .ToList();
+                ViewBag.SavedPostIds = savedPostIds;
+            }
+            else
+            {
+                ViewBag.SavedPostIds = new List<int>();
+            }
 
             return View(post);
         }
@@ -346,6 +385,20 @@ namespace Social_Platform.Controllers
                 .Include(p => p.Comments)
                 .OrderByDescending(p => p.Date)
                 .ToList();
+
+            // Setează SavedPostIds pentru utilizatorul curent
+            if (User.Identity?.IsAuthenticated == true && currUserId != null)
+            {
+                var savedPostIds = _db.SavedPosts
+                    .Where(sp => sp.ApplicationUserId == currUserId)
+                    .Select(sp => sp.PostId)
+                    .ToList();
+                ViewBag.SavedPostIds = savedPostIds;
+            }
+            else
+            {
+                ViewBag.SavedPostIds = new List<int>();
+            }
 
             return View(posts);
         }

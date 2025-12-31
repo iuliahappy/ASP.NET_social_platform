@@ -79,6 +79,20 @@ namespace SocialPlatformTime.Controllers
             ViewBag.IsCurrentUser = currUserId == id;
             ViewBag.ShowFollowSystem = !isEitherUserAdmin;
 
+            // Setează SavedPostIds pentru utilizatorul curent
+            if (User.Identity?.IsAuthenticated == true && currUserId != null)
+            {
+                var savedPostIds = _db.SavedPosts
+                    .Where(sp => sp.ApplicationUserId == currUserId)
+                    .Select(sp => sp.PostId)
+                    .ToList();
+                ViewBag.SavedPostIds = savedPostIds;
+            }
+            else
+            {
+                ViewBag.SavedPostIds = new List<int>();
+            }
+
             return View();
         }
         

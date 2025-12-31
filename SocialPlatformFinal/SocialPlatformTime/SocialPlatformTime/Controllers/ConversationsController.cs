@@ -18,9 +18,9 @@ namespace SocialPlatformTime.Controllers
 
             var conversations = _db.Conversations
                 .Include(c => c.UserConversations)
-                    .ThenInclude(uc => uc.User)
+                    .ThenInclude(uc => uc.ApplicationUser)
                 .Include(c => c.Messages)
-                .Where(c => c.UserConversations.Any(uc => uc.UserId == currentUserId))
+                .Where(c => c.UserConversations.Any(uc => uc.ApplicationUserId == currentUserId))
                 .ToList();
 
             return View(conversations);
@@ -50,7 +50,7 @@ namespace SocialPlatformTime.Controllers
 
             // Update LastEntry
             var userEntry = _db.UserConversations
-                               .FirstOrDefault(uc => uc.ConversationId == id && uc.UserId == currentUserId);
+                               .FirstOrDefault(uc => uc.ConversationId == id && uc.ApplicationUserId == currentUserId);
 
             if (userEntry != null)
             {
@@ -62,13 +62,13 @@ namespace SocialPlatformTime.Controllers
             var messages = _db.Messages
                                 .Include(m => m.ApplicationUser)
                                 .Where(m => m.ConversationId == id)
-                                .Where(m => m.Conversation.UserConversations.Any(uc => uc.UserId == currentUserId))
+                                .Where(m => m.Conversation.UserConversations.Any(uc => uc.ApplicationUserId == currentUserId))
                                 .OrderBy(m => m.dateTime)
                                 .ToList();
 
             // Update the "seen"
             var otherUsersLastEntries = _db.UserConversations
-                                            .Where(uc => uc.ConversationId == id && uc.UserId != currentUserId)
+                                            .Where(uc => uc.ConversationId == id && uc.ApplicationUserId != currentUserId)
                                             .Select(uc => uc.LastEntry)
                                             .ToList();
 

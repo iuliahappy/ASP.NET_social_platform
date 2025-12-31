@@ -26,6 +26,8 @@ namespace SocialPlatformTime.Models
 
         public virtual ICollection<Reaction>? Reactions { get; set; } = new List<Reaction>();
 
+        public virtual ICollection<SavedPost>? SavedPosts { get; set; } = new List<SavedPost>();
+
 
         // proprietate doar pentru upload imagini, nu se mapează în DB
         [NotMapped]

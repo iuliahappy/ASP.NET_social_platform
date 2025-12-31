@@ -21,6 +21,8 @@ namespace SocialPlatformTime.Data
         public DbSet<Group> Groups { get; set; }
         public DbSet<UserConversation> UserConversations { get; set; }
 
+        public DbSet<SavedPost> SavedPosts { get; set; }
+
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
             base.OnModelCreating(modelBuilder);
@@ -62,6 +64,26 @@ namespace SocialPlatformTime.Data
                 .HasOne(bb => bb.Group)
                 .WithMany(bb => bb.RoleTables)
                 .HasForeignKey(bb => bb.GroupId);
+
+
+            // definirea relatiei many-to-many dintre ApplicationUser si Post pentru SavedPosts
+
+            // definire primary key compus
+            modelBuilder.Entity<SavedPost>()
+                .HasKey(sp => new { sp.Id, sp.ApplicationUserId, sp.PostId });
+
+            // definire relatii cu modelele ApplicationUser si Post (FK)
+            modelBuilder.Entity<SavedPost>()
+                .HasOne(sp => sp.ApplicationUser)
+                .WithMany(sp => sp.SavedPosts)
+                .HasForeignKey(sp => sp.ApplicationUserId)
+                .OnDelete(DeleteBehavior.Restrict); // Opreste stergerea automata
+
+            modelBuilder.Entity<SavedPost>()
+                .HasOne(sp => sp.Post)
+                .WithMany(sp => sp.SavedPosts)
+                .HasForeignKey(sp => sp.PostId)
+                .OnDelete(DeleteBehavior.Restrict); // Opreste stergerea automata
 
 
 
