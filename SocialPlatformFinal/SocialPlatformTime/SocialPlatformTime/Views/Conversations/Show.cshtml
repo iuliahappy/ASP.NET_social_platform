@@ -1,15 +1,16 @@
-﻿@model IEnumerable<SocialPlatformTime.Models.Message>
+﻿@using System.Text.Encodings.Web
+@model IEnumerable<SocialPlatformTime.Models.Message>
 
 @{
     ViewData["Title"] = "Conversație";
     var currentUserId = ViewBag.CurrentUserId as string;
 }
 
-<div class="container mt-4">
-    <div class="card shadow-sm">
-        <div class="card-header bg-primary text-white d-flex justify-content-between align-items-center">
+<div class="container mt-4 pb-5">
+    <div class="card shadow-sm border-0">
+        <div class="card-header bg-primary text-white d-flex justify-content-between align-items-center py-3">
             <h4 class="mb-0">Chat</h4>
-            <a asp-controller="Conversations" asp-action="Index" class="btn btn-sm btn-outline-light">Înapoi</a>
+            <a asp-controller="Conversations" asp-action="Index" class="btn btn-sm btn-outline-light px-3">Înapoi</a>
         </div>
 
         <div id="chatWindow" class="card-body" style="height: 500px; overflow-y: auto; background-color: #f0f2f5;">
@@ -19,7 +20,7 @@
 
                 <div class="d-flex @(isMine ? "justify-content-end" : "justify-content-start") mb-3">
                     <div class="p-3 shadow-sm @(isMine ? "bg-primary text-white rounded-chat-mine" : "bg-white text-dark rounded-chat-other")"
-                         style="max-width: 75%; position: relative; min-width: 100px;">
+                         style="max-width: 75%; min-width: 140px;">
 
                         @if (!isMine)
                         {
@@ -28,21 +29,32 @@
                             </small>
                         }
 
-                        <p class="mb-1">@message.Content</p>
+                        <p class="mb-1 text-break">@message.Content</p>
 
-                        <div class="d-flex justify-content-end align-items-center">
-                            <small style="font-size: 0.65rem; opacity: 0.8;">
-                                @message.dateTime.ToString("HH:mm")
-                            </small>
+                        <div class="d-flex justify-content-end align-items-center mt-1 pt-1 @(isMine ? "text-white-50" : "text-muted")" style="border-top: 1px solid rgba(0,0,0,0.05)">
 
                             @if (isMine)
                             {
-                                <span class="ms-1" style="font-size: 0.8rem; line-height: 1;">
-                                    @if (message.IsRead)
-                                    {
-                                        <span class="text-info" title="Văzut de toți" style="color: #4fc3f7 !important;">✔</span>
-                                    }
-                                </span>
+                                <button type="button" class="btn btn-link btn-sm p-0 me-2 text-reset text-decoration-none opacity-75 edit-link"
+                                        onclick="openEditModal(@message.Id, '@Html.Raw(JavaScriptEncoder.Default.Encode(message.Content))')">
+                                    <small>Edit</small>
+                                </button>
+
+                                <form asp-controller="Messages" asp-action="Delete" asp-route-id="@message.Id" method="post"
+                                      class="me-2" onsubmit="return confirm('Sigur vrei să ștergi acest mesaj?');">
+                                    <button type="submit" class="btn btn-link btn-sm p-0 text-reset text-decoration-none opacity-75 delete-link">
+                                        <small>Șterge</small>
+                                    </button>
+                                </form>
+                            }
+
+                            <small style="font-size: 0.65rem;">
+                                @message.dateTime.ToString("HH:mm")
+                            </small>
+
+                            @if (isMine && message.IsRead)
+                            {
+                                <span class="ms-1 fw-bold" style="font-size: 0.85rem; color: #4fc3f7;" title="Văzut de toți">✔✔</span>
                             }
                         </div>
                     </div>
@@ -50,11 +62,33 @@
             }
         </div>
 
-        <div class="card-footer bg-white">
+        <div class="card-footer bg-white border-top-0 py-3">
             <form asp-controller="Messages" asp-action="New" method="post" class="input-group">
                 <input type="hidden" name="ConversationId" value="@ViewBag.ConversationId" />
-                <input type="text" name="Content" class="form-control border-0 bg-light" placeholder="Scrie un mesaj..." required autocomplete="off">
-                <button type="submit" class="btn btn-primary px-4">Trimite</button>
+                <input type="text" name="Content" class="form-control border-0 bg-light rounded-pill px-3"
+                       placeholder="Scrie un mesaj..." required autocomplete="off">
+                <button type="submit" class="btn btn-primary rounded-pill ms-2 px-4 shadow-sm">Trimite</button>
+            </form>
+        </div>
+    </div>
+</div>
+
+<div class="modal fade" id="editMessageModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content shadow-lg border-0">
+            <div class="modal-header">
+                <h5 class="modal-title">Editează mesajul</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <form asp-controller="Messages" asp-action="Edit" method="post">
+                <div class="modal-body">
+                    <input type="hidden" id="editMessageId" name="id" />
+                    <textarea class="form-control bg-light" id="editMessageContent" name="content" rows="4" required style="resize: none;"></textarea>
+                </div>
+                <div class="modal-footer border-0">
+                    <button type="button" class="btn btn-light" data-bs-dismiss="modal">Anulează</button>
+                    <button type="submit" class="btn btn-primary px-4">Salvează</button>
+                </div>
             </form>
         </div>
     </div>
@@ -63,3 +97,49 @@
 <style>
     .rounded-chat-mine {
         border-radius: 18px 18px 0px 18px !important;
+    }
+
+    .rounded-chat-other {
+        border-radius: 18px 18px 18px 0px !important;
+    }
+
+    .edit-link:hover, .delete-link:hover {
+        opacity: 1 !important;
+        text-decoration: underline !important;
+    }
+
+    /* Fix pentru afisarea corecta a modalului */
+    body.modal-open .modal {
+        display: flex !important;
+        align-items: center !important;
+    }
+
+    #chatWindow::-webkit-scrollbar {
+        width: 6px;
+    }
+
+    #chatWindow::-webkit-scrollbar-thumb {
+        background-color: rgba(0,0,0,0.1);
+        border-radius: 10px;
+    }
+</style>
+
+@section Scripts {
+    <script>
+        function openEditModal(id, content) {
+            document.getElementById('editMessageId').value = id;
+            document.getElementById('editMessageContent').value = content;
+
+            var modalEl = document.getElementById('editMessageModal');
+            document.body.appendChild(modalEl);
+
+            var modal = bootstrap.Modal.getOrCreateInstance(modalEl);
+            modal.show();
+        }
+
+        document.addEventListener("DOMContentLoaded", function() {
+            var chatWindow = document.getElementById("chatWindow");
+            chatWindow.scrollTop = chatWindow.scrollHeight;
+        });
+    </script>
+}

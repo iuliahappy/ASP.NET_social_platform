@@ -91,5 +91,12 @@ namespace SocialPlatformTime.Controllers
 
             return View(messages);
         }
+
+        public IActionResult New(int senderId)
+        {
+
+
+            return View();
+        }
     }
 }
