@@ -25,8 +25,8 @@
         {
             // Dacă e 1-la-1, căutăm în UserConversations partenerul (cel care nu sunt eu)
             var partner = conv.UserConversations?
-            .FirstOrDefault(uc => uc.UserId != currentUserId)?
-            .User;
+            .FirstOrDefault(uc => uc.ApplicationUserId != currentUserId)?
+            .ApplicationUser;
 
             displayTitle = partner != null ? (partner.FirstName + " " + partner.LastName).Trim() : "Notițe proprii";
 

@@ -20,6 +20,8 @@ namespace SocialPlatformTime.Models
 
         public virtual ICollection<Message>? Messages { get; set; }
 
+        public virtual ICollection<SavedPost>? SavedPosts { get; set; }
+
         // atribute suplimentare adaugate pentru user
         public string? FirstName { get; set; }
         public string? LastName { get; set; }

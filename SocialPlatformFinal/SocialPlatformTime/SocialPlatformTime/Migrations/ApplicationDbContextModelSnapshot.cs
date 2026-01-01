@@ -464,6 +464,32 @@ namespace SocialPlatformTime.Migrations
                     b.ToTable("GroupRoles");
                 });
 
+            modelBuilder.Entity("SocialPlatformTime.Models.SavedPost", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<string>("ApplicationUserId")
+                        .HasColumnType("nvarchar(450)");
+
+                    b.Property<int>("PostId")
+                        .HasColumnType("int");
+
+                    b.Property<DateTime>("SavedDate")
+                        .HasColumnType("datetime2");
+
+                    b.HasKey("Id", "ApplicationUserId", "PostId");
+
+                    b.HasIndex("ApplicationUserId");
+
+                    b.HasIndex("PostId");
+
+                    b.ToTable("SavedPosts");
+                });
+
             modelBuilder.Entity("SocialPlatformTime.Models.UserConversation", b =>
                 {
                     b.Property<int>("Id")
@@ -472,21 +498,20 @@ namespace SocialPlatformTime.Migrations
 
                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
 
-                    b.Property<int>("ConversationId")
+                    b.Property<string>("ApplicationUserId")
+                        .HasColumnType("nvarchar(450)");
+
+                    b.Property<int?>("ConversationId")
                         .HasColumnType("int");
 
                     b.Property<DateTime>("LastEntry")
                         .HasColumnType("datetime2");
 
-                    b.Property<string>("UserId")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(450)");
-
                     b.HasKey("Id");
 
-                    b.HasIndex("ConversationId");
+                    b.HasIndex("ApplicationUserId");
 
-                    b.HasIndex("UserId");
+                    b.HasIndex("ConversationId");
 
                     b.ToTable("UserConversations");
                 });
@@ -657,23 +682,38 @@ namespace SocialPlatformTime.Migrations
                     b.Navigation("Group");
                 });
 
+            modelBuilder.Entity("SocialPlatformTime.Models.SavedPost", b =>
+                {
+                    b.HasOne("SocialPlatformTime.Models.ApplicationUser", "ApplicationUser")
+                        .WithMany("SavedPosts")
+                        .HasForeignKey("ApplicationUserId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("SocialPlatformTime.Models.Post", "Post")
+                        .WithMany("SavedPosts")
+                        .HasForeignKey("PostId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.Navigation("ApplicationUser");
+
+                    b.Navigation("Post");
+                });
+
             modelBuilder.Entity("SocialPlatformTime.Models.UserConversation", b =>
                 {
+                    b.HasOne("SocialPlatformTime.Models.ApplicationUser", "ApplicationUser")
+                        .WithMany()
+                        .HasForeignKey("ApplicationUserId");
+
                     b.HasOne("SocialPlatformTime.Models.Conversation", "Conversation")
                         .WithMany("UserConversations")
-                        .HasForeignKey("ConversationId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
+                        .HasForeignKey("ConversationId");
 
-                    b.HasOne("SocialPlatformTime.Models.ApplicationUser", "User")
-                        .WithMany()
-                        .HasForeignKey("UserId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
+                    b.Navigation("ApplicationUser");
 
                     b.Navigation("Conversation");
-
-                    b.Navigation("User");
                 });
 
             modelBuilder.Entity("SocialPlatformTime.Models.ApplicationUser", b =>
@@ -691,6 +731,8 @@ namespace SocialPlatformTime.Migrations
                     b.Navigation("Reactions");
 
                     b.Navigation("RoleTables");
+
+                    b.Navigation("SavedPosts");
                 });
 
             modelBuilder.Entity("SocialPlatformTime.Models.Conversation", b =>
@@ -712,6 +754,8 @@ namespace SocialPlatformTime.Migrations
                     b.Navigation("Comments");
 
                     b.Navigation("Reactions");
+
+                    b.Navigation("SavedPosts");
                 });
 #pragma warning restore 612, 618
         }

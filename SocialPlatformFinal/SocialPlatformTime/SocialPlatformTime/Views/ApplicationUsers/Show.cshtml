@@ -37,6 +37,15 @@
                 </button>
             </form>
 
+            <form method="get"
+                  asp-controller="Conversations"
+                  asp-action="New"
+                  asp-route-id="@user.Id">
+                <button type="submit" class="btn btn-primary shadow-sm">
+                    <i class="bi bi-chat-fill me-2"></i> Send a message
+                </button>
+            </form>
+
             <div class="mt-2">
                 @if (iFollow && followsMe)
                 {
@@ -63,6 +72,12 @@
                asp-controller="Posts"
                 asp-action="New">
                 New Post
+            </a>
+
+            <a class="btn btn-outline-warning"
+               asp-controller="SavedPosts"
+               asp-action="Index">
+                <i class="bi bi-bookmark-fill"></i> Saved Posts
             </a>
         }
     </div>

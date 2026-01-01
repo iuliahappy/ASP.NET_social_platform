@@ -56,6 +56,11 @@
     var userReaction = Model.Reactions
         .FirstOrDefault(r => r.ApplicationUserId == userId)
         ?.ReactionType;
+
+    // Verifică dacă postarea este salvată de utilizatorul curent
+    // Folosim IEnumerable<int> pentru a accepta orice tip de colecție
+    var savedPostIds = ViewBag.SavedPostIds as IEnumerable<int>;
+    bool isSaved = savedPostIds != null && savedPostIds.Contains(Model.Id);
 }
 
 <div class="d-flex justify-content-center mt-4">
@@ -151,6 +156,20 @@
                             <small>You</small>
                         } -- 'You liked this' type of note *@ 
                     </button>
+
+
+                    @* Buton Save/Unsave *@
+                    @if (User.Identity?.IsAuthenticated == true)
+                    {
+                        <button type="button"
+                                class="btn @(isSaved ? "btn-warning" : "btn-outline-warning") save-btn"
+                                data-post-id="@Model.Id"
+                                onclick="toggleSave(@Model.Id)">
+                            <i class="bi @(isSaved ? "bi-bookmark-fill" : "bi-bookmark")"></i>
+                            <span class="save-text">@(isSaved ? "Saved" : "Save")</span>
+                        </button>
+                    }
+
 
                     <a class="btn btn-success ms-2"
                        asp-controller="Comments"
@@ -255,5 +274,48 @@
                 }, 300);
             }
         });
+    }
+     async function toggleSave(postId) {
+        try {
+            const response = await fetch('/SavedPosts/ToggleSave?postId=' + postId, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                }
+            });
+
+            if (!response.ok) {
+                throw new Error('Network response was not ok');
+            }
+
+            const data = await response.json();
+
+            if (data.success) {
+                const saveButton = document.querySelector(`.save-btn[data-post-id="${postId}"]`);
+                const saveText = saveButton?.querySelector('.save-text');
+                const saveIcon = saveButton?.querySelector('i');
+
+                if (saveButton && saveText && saveIcon) {
+                    if (data.isSaved) {
+                        saveButton.classList.remove('btn-outline-warning');
+                        saveButton.classList.add('btn-warning');
+                        saveIcon.classList.remove('bi-bookmark');
+                        saveIcon.classList.add('bi-bookmark-fill');
+                        saveText.textContent = 'Saved';
+                    } else {
+                        saveButton.classList.remove('btn-warning');
+                        saveButton.classList.add('btn-outline-warning');
+                        saveIcon.classList.remove('bi-bookmark-fill');
+                        saveIcon.classList.add('bi-bookmark');
+                        saveText.textContent = 'Save';
+                    }
+                }
+            } else {
+                alert(data.message || 'Error saving post');
+            }
+        } catch (error) {
+            console.error('Error:', error);
+            alert('An error occurred. Please try again.');
+        }
     }
 </script>

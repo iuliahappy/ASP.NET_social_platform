@@ -1,0 +1,31 @@
+﻿@model IEnumerable<SocialPlatformTime.Models.Post>
+
+@{
+    ViewData["Title"] = "Saved Posts";
+}
+
+<div class="container mt-4">
+    <div class="row">
+        <div class="col-12">
+            <h2 class="mb-4">
+                <i class="bi bi-bookmark-fill"></i> My Saved Posts
+            </h2>
+
+            @if (ViewBag.SavedPosts == null || !((IEnumerable<Post>)ViewBag.SavedPosts).Any())
+            {
+                <div class="alert alert-info">
+                    <i class="bi bi-info-circle"></i> You haven't saved any posts yet.
+                </div>
+            }
+            else
+            {
+                @foreach (var post in ViewBag.SavedPosts)
+                {
+                    <div class="mb-4">
+                        <partial name="PostInfo" model="post" />
+                    </div>
+                }
+            }
+        </div>
+    </div>
+</div>
