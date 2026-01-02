@@ -1,6 +1,7 @@
 ﻿using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using NuGet.Protocol.Plugins;
 using SocialPlatformTime.Data;
 using SocialPlatformTime.Models;
 
@@ -95,10 +96,46 @@ namespace SocialPlatformTime.Controllers
             return View(messages);
         }
 
-        public IActionResult New(int reciverId)
+        [HttpPost]
+        public IActionResult New(string receiverId)
         {
-            var currentUser = _userManager.GetUserId(User);
-            return RedirectToAction("Conversations", "Show");
+            Console.WriteLine(receiverId);
+            if (string.IsNullOrEmpty(receiverId)) return BadRequest();
+
+            var currentUserId = _userManager.GetUserId(User);
+
+            var conversationId = _db.UserConversations
+                                    .Where(uc => uc.ApplicationUserId == currentUserId || uc.ApplicationUserId == receiverId)
+                                    .GroupBy(uc => uc.ConversationId)
+                                    .Where(g => g.Count() == 2)
+                                    .Select(g => g.Key)
+                                    .FirstOrDefault();
+
+            if (conversationId == null)
+            {
+                var newConversation = new Conversation { GroupId = null };
+                _db.Conversations.Add(newConversation);
+                _db.SaveChanges();
+
+                conversationId = newConversation.Id;
+
+                _db.UserConversations.Add(new UserConversation
+                {
+                    ConversationId = conversationId,
+                    ApplicationUserId = receiverId,
+                    LastEntry = DateTime.Now
+                });
+                _db.UserConversations.Add(new UserConversation
+                {
+                    ConversationId = conversationId,
+                    ApplicationUserId = currentUserId,
+                    LastEntry = DateTime.Now
+                });
+
+                _db.SaveChanges();
+            }
+
+            return RedirectToAction("Show", "Conversations", new { id = conversationId });
         }
     }
 }

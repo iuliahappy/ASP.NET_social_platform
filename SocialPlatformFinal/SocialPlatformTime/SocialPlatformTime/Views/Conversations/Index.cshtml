@@ -9,7 +9,6 @@
 <div class="list-group shadow-sm">
     @foreach (var conv in Model)
     {
-        // Preluăm ultimul mesaj pentru preview
         var lastMessage = conv.Messages?.OrderByDescending(m => m.dateTime).FirstOrDefault();
 
         string displayTitle;
@@ -17,20 +16,17 @@
 
         if (conv.Group != null)
         {
-            // Dacă e grup, afișăm numele grupului
             displayTitle = conv.Group.Name;
             avatarName = displayTitle;
         }
         else
         {
-            // Dacă e 1-la-1, căutăm în UserConversations partenerul (cel care nu sunt eu)
             var partner = conv.UserConversations?
             .FirstOrDefault(uc => uc.ApplicationUserId != currentUserId)?
             .ApplicationUser;
 
-            displayTitle = partner != null ? (partner.FirstName + " " + partner.LastName).Trim() : "Notițe proprii";
+            displayTitle = partner != null ? (partner.FirstName + " " + partner.LastName).Trim() : "Self notes";
 
-            // Dacă nu are nume setat, folosim UserName
             if (string.IsNullOrEmpty(displayTitle))
             {
                 displayTitle = partner?.UserName ?? "Me";
@@ -64,7 +60,7 @@
                             }
                             else
                             {
-                                <span class="fst-italic">Conversație nouă...</span>
+                                <span class="fst-italic">New conversation...</span>
                             }
                         </p>
 

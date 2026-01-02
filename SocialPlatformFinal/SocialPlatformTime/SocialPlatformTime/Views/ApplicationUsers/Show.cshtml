@@ -37,10 +37,10 @@
                 </button>
             </form>
 
-            <form method="get"
+            <form method="post"
                   asp-controller="Conversations"
                   asp-action="New"
-                  asp-route-id="@user.Id">
+                  asp-route-receiverId="@user.Id">
                 <button type="submit" class="btn btn-primary shadow-sm">
                     <i class="bi bi-chat-fill me-2"></i> Send a message
                 </button>
