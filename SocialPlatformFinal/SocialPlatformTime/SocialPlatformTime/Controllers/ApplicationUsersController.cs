@@ -241,7 +241,7 @@ namespace SocialPlatformTime.Controllers
                 Console.WriteLine("After first if condition");
 
                 var fileName = Guid.NewGuid() + Path.GetExtension(updatedUser.ImageFile.FileName);
-                var filePath = Path.Combine("wwwroot/images/userProfileImages", fileName);
+                var filePath = Path.Combine("wwwroot/images", fileName);
                 Console.WriteLine("After variable initialization");
 
                 using (var stream = new FileStream(filePath, FileMode.Create))
@@ -250,7 +250,7 @@ namespace SocialPlatformTime.Controllers
                 }
                 Console.WriteLine("After copying image");
 
-                user.Image = "/images/userProfileImages/" + fileName;
+                user.Image = "/images/" + fileName;
             }
 
             await _userManager.UpdateAsync(user);
