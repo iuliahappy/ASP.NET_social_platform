@@ -1,5 +1,6 @@
 ﻿using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc.Rendering;
+using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 
 namespace SocialPlatformTime.Models
@@ -25,12 +26,19 @@ namespace SocialPlatformTime.Models
         // atribute suplimentare adaugate pentru user
         public string? FirstName { get; set; }
         public string? LastName { get; set; }
-
         public string? ProfileDescription { get; set; }
-
         public string? Image { get; set; } 
         [NotMapped]
         public IFormFile? ImageFile { get; set; }
+
+        public bool IsPublic { get; set; } = true; // by default, all profiles start as public
+
+        // To enforce all required fields after having registered using Identity Framework
+        public bool IsProfileComplete =>
+            !string.IsNullOrWhiteSpace(FirstName) &&
+            !string.IsNullOrWhiteSpace(LastName) &&
+            !string.IsNullOrWhiteSpace(ProfileDescription) &&
+            !string.IsNullOrWhiteSpace(Image);
 
         // variabila in care vom retine rolurile existente in baza de date
         // pentru popularea unui dropdown list

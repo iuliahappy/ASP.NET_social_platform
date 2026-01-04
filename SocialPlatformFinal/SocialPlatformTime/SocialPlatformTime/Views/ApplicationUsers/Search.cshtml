@@ -1,0 +1,16 @@
+﻿@model List<ApplicationUser>
+
+<h2>Search results</h2>
+
+@foreach (var user in Model)
+{
+    <div class="card mb-2 p-2">
+        @* <img src="@user.Image" width="50" /> *@
+        <strong>@user.FirstName @user.LastName</strong>
+        <p>@user.ProfileDescription</p>
+
+        <a asp-action="Show" asp-route-id="@user.Id">
+            View profile
+        </a>
+    </div>
+}

@@ -87,16 +87,25 @@
 
 <h3>@user.UserName's Posts</h3>
 
-@if (user.Posts == null || user.Posts.Count == 0)
+@if ((bool)ViewBag.CanSeeFullProfile)
 {
-    <p>No posts yet.</p>
+    @if (user.Posts == null || user.Posts.Count == 0)
+    {
+        <p>No posts yet.</p>
+    }
+    else
+    {
+        foreach (var post in user.Posts)
+        {
+            <partial name="PostInfo" model="post" />
+        }
+    }
 }
 else
 {
-    foreach (var post in user.Posts)
-    {
-        <partial name="PostInfo" model="post" />
-    }
+    <div class="alert alert-info">
+        This profile is private.
+    </div>
 }
 
 @if (ViewBag.ShowFollowSystem && !isCurrentUser)

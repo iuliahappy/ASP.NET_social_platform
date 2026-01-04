@@ -25,6 +25,11 @@
     <textarea asp-for="ProfileDescription" class="form-control"></textarea>
     <label>Profile Image</label>
     <input asp-for="ImageFile" type="file" class="form-control" />
+    <label>Profile visibility</label>
+    <select asp-for="IsPublic" class="form-control">
+        <option value="true">Public</option>
+        <option value="false">Private</option>
+    </select>
     @if (canChangeRole)
     { 
         <label>Role</label>

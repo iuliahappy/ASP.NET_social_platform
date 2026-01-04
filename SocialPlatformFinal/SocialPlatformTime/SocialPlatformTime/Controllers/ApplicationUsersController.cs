@@ -43,9 +43,11 @@ namespace SocialPlatformTime.Controllers
         }
 
         // Display only user profile by requested id 
+        [AllowAnonymous]
         public async Task<IActionResult> Show(string id)
         {
             var currUserId = _userManager.GetUserId(User);
+
             var userWithPosts = await _userManager.Users
                  .Include(u => u.Posts)
                  .ThenInclude(p => p.Reactions)
@@ -53,6 +55,9 @@ namespace SocialPlatformTime.Controllers
 
             if (userWithPosts == null)
                 return NotFound();
+
+            // Can View <=> Profile is Public, is Owner of Profile or current User is an Admin
+            ViewBag.CanViewFullProfile = (userWithPosts.IsPublic || (currUserId == id) || User.IsInRole("Administrator"));
 
             bool following = false; // whether they are following the current user
             bool followed = false; // whether the current user follows them
@@ -198,11 +203,10 @@ namespace SocialPlatformTime.Controllers
             if (id != _userManager.GetUserId(User)) return Forbid();
 
             ViewBag.CanChangeRole = false;
-            Console.WriteLine("MEOWWWW");
 
             if (!ModelState.IsValid)
+            //if (!ModelState.IsValid || (updatedUser.ImageFile == null && string.IsNullOrEmpty(user.Image)))
             {
-                Console.WriteLine(" Invalid MEOWWWW");
 
                 if (User.IsInRole("Administrator"))
                 {
@@ -225,7 +229,6 @@ namespace SocialPlatformTime.Controllers
                 }
                 return View(updatedUser);
             }
-            Console.WriteLine("MEOWWWW");
 
             // Update user details
             user.UserName = updatedUser.UserName;
@@ -235,26 +238,21 @@ namespace SocialPlatformTime.Controllers
             user.PhoneNumber = updatedUser.PhoneNumber;
             user.ProfileDescription = updatedUser.ProfileDescription;
 
-            Console.WriteLine("Right before Image");
             if (updatedUser.ImageFile != null)
             {
-                Console.WriteLine("After first if condition");
 
                 var fileName = Guid.NewGuid() + Path.GetExtension(updatedUser.ImageFile.FileName);
                 var filePath = Path.Combine("wwwroot/images", fileName);
-                Console.WriteLine("After variable initialization");
 
                 using (var stream = new FileStream(filePath, FileMode.Create))
                 {
                     await updatedUser.ImageFile.CopyToAsync(stream);
                 }
-                Console.WriteLine("After copying image");
 
                 user.Image = "/images/" + fileName;
             }
 
             await _userManager.UpdateAsync(user);
-            Console.WriteLine("After updating user profile");
 
             // Update role if admin
             if (User.IsInRole("Administrator"))
@@ -290,6 +288,20 @@ namespace SocialPlatformTime.Controllers
             TempData["messageType"] = "alert-success";
             return RedirectToAction("Index");
         }
+
+        [AllowAnonymous]
+        public IActionResult Search(string query)
+        {
+            var users = _db.Users
+                .Where(u =>
+                    u.FirstName.Contains(query) ||
+                    u.LastName.Contains(query) ||
+                    (u.FirstName + " " + u.LastName).Contains(query))
+            .ToList();
+
+            return View(users);
+        }
+
 
         //// Login procedure (get request)
         //[AllowAnonymous]

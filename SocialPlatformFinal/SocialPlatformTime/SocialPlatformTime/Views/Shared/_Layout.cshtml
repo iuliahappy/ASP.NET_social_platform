@@ -139,6 +139,18 @@
         border-radius: 15px !important;
         border: 1px solid rgba(255, 255, 255, 0.5) !important;
     }
+    
+    /* Stil pentru Search */
+
+    .navbar input[type="search"] {
+        background: rgba(255, 255, 255, 0.85) !important;
+        border-radius: 20px;
+        border: none;
+    }
+
+    .navbar button {
+        border-radius: 50%;
+    }
 </style>
 
 <body>
@@ -151,7 +163,7 @@
                 <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target=".navbar-collapse">
                     <span class="navbar-toggler-icon"></span>
                 </button>
-                <div class="navbar-collapse collapse d-sm-inline-flex justify-content-between">
+                <!--  Navigstion Menu  -->
                     <ul class="navbar-nav flex-grow-1">
                         <li class="nav-item">
                             <a class="nav-link" asp-controller="Home" asp-action="Index">Home</a>
@@ -193,6 +205,24 @@
                             }
                         }
                     </ul>
+
+                <!--  User Search Bar -->
+                    <form class="d-flex me-3"
+                          asp-controller="ApplicationUsers"
+                          asp-action="Search"
+                          method="get">
+                        <input class="form-control form-control-sm me-2"
+                               type="search"
+                               name="query"
+                               placeholder="Search users..."
+                               aria-label="Search"
+                               style="min-width: 200px;" />
+
+                        <button class="btn btn-outline-light btn-sm" type="submit">
+                            <i class="bi bi-search"></i>
+                        </button>
+                    </form>
+                <!-- Login Menu  -->
                     <div class="d-flex align-items-center user-panel rounded-pill px-3 py-1">
                         <partial name="_LoginPartial" />
                     </div>
