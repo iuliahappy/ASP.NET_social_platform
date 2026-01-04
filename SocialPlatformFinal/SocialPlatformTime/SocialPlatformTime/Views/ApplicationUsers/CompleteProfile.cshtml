@@ -1,20 +1,19 @@
-﻿@model SocialPlatformTime.Models.ApplicationUser
+﻿@model ApplicationUser
 
-<h3>Add New User</h3>
-<form asp-action="Create" method="post">
-    <label>Email</label>
-    <input asp-for="Email" class="form-control" />
+<h2>Complete your profile</h2>
+@if (TempData["message"] != null)
+{
+    <div class="alert @TempData["messageType"]">
+        @TempData["message"]
+    </div>
+}
+<form asp-action="CompleteProfile" method="post">
+
     <label>First Name</label>
     <input asp-for="FirstName" class="form-control" />
     <label>Last Name</label>
     <input asp-for="LastName" class="form-control" />
-    <label>Role</label>
-    <select name="selectedRole" class="form-control">
-        @foreach (var role in ViewBag.Roles as List<SelectListItem>)
-        {
-            <option value="@role.Value">@role.Text</option>
-        }
-    </select>
+
     <div class="mb-3">
         <label asp-for="ProfileDescription" class="form-label fw-bold">
             Text Content
@@ -28,5 +27,7 @@
         <small class="form-text text-muted text-image-video">Select a photo from your computer.</small>
     </div>
     <br />
-    <button type="submit" class="btn btn-success">Create User</button>
+
+
+    <button type="submit">Save</button>
 </form>

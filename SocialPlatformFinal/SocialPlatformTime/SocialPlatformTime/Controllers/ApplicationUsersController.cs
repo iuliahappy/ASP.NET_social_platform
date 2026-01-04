@@ -5,7 +5,7 @@ using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.EntityFrameworkCore;
 using SocialPlatformTime.Data;
 using SocialPlatformTime.Models;
-using System.Threading.Tasks;
+using System.Globalization;
 
 namespace SocialPlatformTime.Controllers
 {
@@ -57,7 +57,8 @@ namespace SocialPlatformTime.Controllers
                 return NotFound();
 
             // Can View <=> Profile is Public, is Owner of Profile or current User is an Admin
-            ViewBag.CanViewFullProfile = (userWithPosts.IsPublic || (currUserId == id) || User.IsInRole("Administrator"));
+            bool canView = (userWithPosts.IsPublic || (currUserId == id) || User.IsInRole("Administrator"));
+            ViewBag.CanViewFullProfile = canView;
 
             bool following = false; // whether they are following the current user
             bool followed = false; // whether the current user follows them
@@ -118,7 +119,7 @@ namespace SocialPlatformTime.Controllers
         [Authorize(Roles = "Administrator")]
         // Create User (post request)
         [HttpPost]
-        public async Task<IActionResult> Create(ApplicationUser newUser, string selectedRole, string password)
+        public async Task<IActionResult> Create(ApplicationUser newUser, string selectedRole)
         {
             if (!ModelState.IsValid)
             {
@@ -133,7 +134,7 @@ namespace SocialPlatformTime.Controllers
             }
 
             // If data is valid, then create Identity user
-            var result = await _userManager.CreateAsync(newUser, password);
+            var result = await _userManager.CreateAsync(newUser);
 
             if (!result.Succeeded)
             {
@@ -231,11 +232,9 @@ namespace SocialPlatformTime.Controllers
             }
 
             // Update user details
-            user.UserName = updatedUser.UserName;
             user.Email = updatedUser.Email;
             user.FirstName = updatedUser.FirstName;
             user.LastName = updatedUser.LastName;
-            user.PhoneNumber = updatedUser.PhoneNumber;
             user.ProfileDescription = updatedUser.ProfileDescription;
 
             if (updatedUser.ImageFile != null)
@@ -302,66 +301,55 @@ namespace SocialPlatformTime.Controllers
             return View(users);
         }
 
+        public async Task<IActionResult> CompleteProfile()
+        {
 
-        //// Login procedure (get request)
-        //[AllowAnonymous]
-        //public IActionResult Login()
-        //{
-        //    return View();
-        //}
+            var user = await _userManager.GetUserAsync(User);
 
-        //// Login procedure (post request)
-        //[HttpPost]
-        //[AllowAnonymous]
-        //public async Task<IActionResult> Login(string email, string password)
-        //{
-        //    var result = await _signInManager.PasswordSignInAsync(email, password, false, false);
-        //    if (result.Succeeded)
-        //        return RedirectToAction("Index", "Home");
+            if (user == null)
+                return Challenge();
 
-        //    ModelState.AddModelError("", "Invalid login attempt");
-        //    return View();
-        //}
+            // If (somehow ?) already completed, skip
+            if (user.IsProfileComplete)
+                return RedirectToAction("Index", "Home");
 
-        //// Logout procdure (post only)
-        //[HttpPost]
-        //[AllowAnonymous]
-        //public async Task<IActionResult> Logout()
-        //{
-        //    await _signInManager.SignOutAsync();
-        //    return RedirectToAction("Login");
-        //}
+            ViewBag.Title = "Complete Your Profile";
+            ViewBag.Warning = "You must complete all required fields before continuing.";
 
-        //// Password Change (get request)
-        //[AllowAnonymous]
-        //public IActionResult ChangePassword()
-        //{
-        //    return View();
-        //}
+            return View(user);
+        }
 
-        //// Password Change (post request)
-        //[HttpPost]
-        //[AllowAnonymous]
-        //public async Task<IActionResult> ChangePassword(string id, string newPassword)
-        //{
-        //    var user = await _userManager.FindByIdAsync(id);
-        //    if (user == null) return NotFound();
+        [HttpPost]
+        public async Task<IActionResult> CompleteProfile(ApplicationUser model)
+        {
+            var user = await _userManager.GetUserAsync(User);
+            if (user == null)
+                return Challenge();
 
-        //    var token = await _userManager.GeneratePasswordResetTokenAsync(user);
-        //    var result = await _userManager.ResetPasswordAsync(user, token, newPassword);
+            bool isInvalid =
+                string.IsNullOrWhiteSpace(model.FirstName) ||
+                string.IsNullOrWhiteSpace(model.LastName) ||
+                string.IsNullOrWhiteSpace(model.ProfileDescription);
 
-        //    if (result.Succeeded)
-        //    {
-        //        TempData["message"] = "Password changed successfully!";
-        //        TempData["messageType"] = "alert-success";
-        //    }
-        //    else
-        //    {
-        //        foreach (var error in result.Errors)
-        //            ModelState.AddModelError("", error.Description);
-        //    }
+            if (isInvalid)
+            {
+                TempData["message"] = "Please complete all of the profile fields in order to continue.";
+                TempData["messageType"] = "alert-danger";
+                return View(model);
+            }
 
-        //    return RedirectToAction("Edit", new { id });
-        //}
+            user.FirstName = model.FirstName;
+            user.LastName = model.LastName;
+            user.ProfileDescription = model.ProfileDescription;
+            user.Image = model.Image;
+
+            await _userManager.UpdateAsync(user);
+            
+            TempData["message"] = "Profile completed successfully!";
+            TempData["messageType"] = "alert-success";
+            
+            return RedirectToAction("Index", "Home");
+        }
+
     }
 }

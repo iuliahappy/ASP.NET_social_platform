@@ -87,7 +87,7 @@
 
 <h3>@user.UserName's Posts</h3>
 
-@if ((bool)ViewBag.CanSeeFullProfile)
+@if ((bool)ViewBag.CanViewFullProfile)
 {
     @if (user.Posts == null || user.Posts.Count == 0)
     {
