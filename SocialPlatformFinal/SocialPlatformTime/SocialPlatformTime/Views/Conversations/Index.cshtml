@@ -6,11 +6,77 @@
     var currentUserId = UserManager.GetUserId(User);
 }
 
-<div class="list-group shadow-sm">
+<style>
+    .conv-item {
+        transition: all 0.2s;
+        border-radius: 10px !important;
+        margin-bottom: 5px;
+        margin-inline: 10px;
+        border: none !important;
+    }
+
+        .conv-item:hover {
+            background-color: #f8f9fa;
+            transform: translateX(5px);
+        }
+
+    .avatar-shadow {
+        box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+    }
+
+    .unread-dot {
+        width: 12px;
+        height: 12px;
+        border: 2px solid white;
+    }
+</style>
+
+<div class="d-flex justify-content-between align-items-center mb-4 px-3">
+    <h4 class="fw-bold mb-0">Conversations</h4>
+    <button type="button" class="btn btn-primary rounded-pill px-4 shadow-sm" data-bs-toggle="modal" data-bs-target="#newGroupModal">
+        <i class="bi bi-plus-lg me-2"></i>New Group
+    </button>
+</div>
+
+<div class="modal fade" id="newGroupModal" tabindex="-1" aria-labelledby="newGroupModalLabel" aria-hidden="true" style="z-index: 1060;">
+    <div class="modal-dialog modal-dialog-centered" style="z-index: 1070;">
+        <div class="modal-content border-0 shadow-lg">
+            <div class="modal-header border-0">
+                <h5 class="modal-title fw-bold" id="newGroupModalLabel">Create New Group</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <form asp-controller="Groups" asp-action="New" method="post">
+                <div class="modal-body">
+                    <div class="form-group">
+                        <label class="form-label text-muted small fw-bold">Group Name</label>
+                        <input type="text" name="groupName" class="form-control form-control-lg bg-light border-0 shadow-sm"
+                               placeholder="Ex: Team Project, Family Chat..." required autofocus />
+                    </div>
+                </div>
+                <div class="modal-footer border-0">
+                    <button type="button" class="btn btn-outline-secondary rounded-pill px-4" data-bs-dismiss="modal">Cancel</button>
+                    <button type="submit" class="btn btn-primary rounded-pill px-4 shadow-sm">
+                        Confirm & Create
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        // Opțional: Forțăm mutarea modalului în <body> la deschidere pentru a evita problemele de z-index
+        $(document).ready(function () {
+            $('#newGroupModal').appendTo("body");
+        });
+    </script>
+}
+
+<div class="list-group">
     @foreach (var conv in Model)
     {
         var lastMessage = conv.Messages?.OrderByDescending(m => m.dateTime).FirstOrDefault();
-
         string displayTitle;
         string avatarName;
 
@@ -26,47 +92,50 @@
             .ApplicationUser;
 
             displayTitle = partner != null ? (partner.FirstName + " " + partner.LastName).Trim() : "Self notes";
-
-            if (string.IsNullOrEmpty(displayTitle))
-            {
-                displayTitle = partner?.UserName ?? "Me";
-            }
-
+            if (string.IsNullOrEmpty(displayTitle)) displayTitle = partner?.UserName ?? "Me";
             avatarName = partner?.UserName ?? "Me";
         }
 
-        <a asp-controller="Conversations" asp-action="Show" asp-route-id="@conv.Id" class="list-group-item list-group-item-action border-start-0 border-end-0 border-top-0 py-3">
+        <a asp-controller="Conversations" asp-action="Show" asp-route-id="@conv.Id" class="list-group-item list-group-item-action conv-item py-3">
             <div class="d-flex align-items-center">
-                <img src="https://ui-avatars.com/api/?name=@avatarName&background=random&size=128"
-                     class="rounded-circle me-3" width="50" height="50" style="object-fit: cover;">
+                <div class="position-relative">
+                    <img src="https://ui-avatars.com/api/?name=@avatarName&background=random&size=128"
+                         class="rounded-circle me-3 avatar-shadow" width="55" height="55" style="object-fit: cover;">
+                    @if (conv.Group != null)
+                    {
+                        <span class="position-absolute bottom-0 end-0 badge rounded-pill bg-dark border border-white" style="font-size: 0.6rem;">
+                            <i class="bi bi-people-fill"></i>
+                        </span>
+                    }
+                </div>
 
                 <div class="flex-grow-1">
-                    <div class="d-flex justify-content-between align-items-center">
-                        <h6 class="mb-0 fw-bold">@displayTitle</h6>
-                        <small class="text-muted">
+                    <div class="d-flex justify-content-between align-items-center mb-1">
+                        <h6 class="mb-0 fw-bold text-dark">@displayTitle</h6>
+                        <small class="text-muted" style="font-size: 0.75rem;">
                             @lastMessage?.dateTime.ToString("HH:mm")
                         </small>
                     </div>
 
                     <div class="d-flex justify-content-between align-items-center">
-                        <p class="mb-0 text-muted small text-truncate" style="max-width: 250px;">
+                        <p class="mb-0 text-muted small text-truncate" style="max-width: 200px;">
                             @if (lastMessage != null)
                             {
                                 if (lastMessage.ApplicationUserId == currentUserId)
                                 {
-                                    <span class="fw-bold text-dark">Tu: </span>
+                                    <span class="text-primary fw-medium">You: </span>
                                 }
                                 @lastMessage.Content
                             }
                             else
                             {
-                                <span class="fst-italic">New conversation...</span>
+                                <span class="fst-italic opacity-75">Start a conversation...</span>
                             }
                         </p>
 
                         @if (lastMessage != null && !lastMessage.IsRead && lastMessage.ApplicationUserId != currentUserId)
                         {
-                            <span class="badge bg-primary rounded-pill" style="width: 10px; height: 10px; padding: 0;">&nbsp;</span>
+                            <span class="badge bg-primary rounded-circle unread-dot p-0 shadow-sm">&nbsp;</span>
                         }
                     </div>
                 </div>
