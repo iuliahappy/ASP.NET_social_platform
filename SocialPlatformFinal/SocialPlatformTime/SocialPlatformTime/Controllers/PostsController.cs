@@ -122,12 +122,16 @@ namespace Social_Platform.Controllers
 
             post.ApplicationUserId = _userManager.GetUserId(User);
 
+            // ELIMINĂM eroarea pentru ApplicationUserId din ModelState
+            // pentru că o setăm manual și nu vine din formular
+            ModelState.Remove("ApplicationUserId");
+
 
             // Validare custom: cel putin un camp trebuie completat
             if (string.IsNullOrWhiteSpace(post.PostDescription) &&
                 string.IsNullOrWhiteSpace(post.TextContent) &&
-                string.IsNullOrWhiteSpace(post.Image) &&
-                string.IsNullOrWhiteSpace(post.Video))
+                post.ImageFile == null &&
+                post.VideoFile == null)
             {
                 ModelState.AddModelError("", "You have to complete at least one field!");
                 return View(post);
@@ -135,11 +139,7 @@ namespace Social_Platform.Controllers
 
             //Console.WriteLine(post.ApplicationUserId);
 
-            // ELIMINĂM eroarea pentru ApplicationUserId din ModelState
-            // pentru că o setăm manual și nu vine din formular
-            ModelState.Remove("ApplicationUserId");
-
-
+          
 
             if (ModelState.IsValid)                                                            
             {
