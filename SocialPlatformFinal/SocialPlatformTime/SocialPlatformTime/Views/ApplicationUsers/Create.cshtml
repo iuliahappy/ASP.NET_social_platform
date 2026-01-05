@@ -1,5 +1,12 @@
 ﻿@model SocialPlatformTime.Models.ApplicationUser
 
+@if (TempData["message"] != null)
+{
+    <div class="alert @TempData["messageType"]">
+        @TempData["message"]
+    </div>
+}
+
 <h3>Add New User</h3>
 <form asp-action="Create" method="post">
     <label>Email</label>

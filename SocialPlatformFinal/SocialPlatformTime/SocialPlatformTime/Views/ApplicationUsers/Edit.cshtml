@@ -6,6 +6,13 @@
     string currentRole = ViewBag.CurrentRole;
 }
 
+@if (TempData["message"] != null)
+{
+    <div class="alert @TempData["messageType"]">
+        @TempData["message"]
+    </div>
+}
+
 
 <h3>Edit User</h3>
 <form asp-action="Edit" method="post" enctype="multipart/form-data">

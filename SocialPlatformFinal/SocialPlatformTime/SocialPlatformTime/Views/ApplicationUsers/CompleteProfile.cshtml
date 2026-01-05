@@ -1,5 +1,8 @@
 ﻿@model ApplicationUser
-
+@{
+    ViewData["Title"] = "Complete Profile";
+    Layout = "_Layout";
+}
 <h2>Complete your profile</h2>
 @if (TempData["message"] != null)
 {
@@ -7,7 +10,7 @@
         @TempData["message"]
     </div>
 }
-<form asp-action="CompleteProfile" method="post">
+<form asp-action="CompleteProfile" method="post" enctype="multipart/form-data">
 
     <label>First Name</label>
     <input asp-for="FirstName" class="form-control" />

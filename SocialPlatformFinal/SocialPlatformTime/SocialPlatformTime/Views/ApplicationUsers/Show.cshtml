@@ -8,6 +8,13 @@
     bool isCurrentUser = ViewBag.IsCurrentUser;
 }
 
+@if (TempData["message"] != null)
+{
+    <div class="alert @TempData["messageType"]">
+        @TempData["message"]
+    </div>
+}
+
 <div class="card mb-4">
     <div class="card-body">
         <h2>@user.UserName</h2>

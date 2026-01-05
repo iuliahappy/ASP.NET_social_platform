@@ -55,7 +55,7 @@ namespace SocialPlatformTime.Controllers
 
             if (userWithPosts == null)
                 return NotFound();
-            // Non-Admin user tries to view Admin User Profile Page
+            // Non-Admin user tries to view Admin User P
             else if (!User.IsInRole("Administrator") && await _userManager.IsInRoleAsync(userWithPosts, "Administrator"))
                 return Unauthorized();
 
@@ -199,7 +199,6 @@ namespace SocialPlatformTime.Controllers
 
         // Edit user (post request)
         [HttpPost]
-        [ValidateAntiForgeryToken]
         public async Task<IActionResult> Edit(string id, ApplicationUser updatedUser, string selectedRole)
         {
             var user = await _userManager.FindByIdAsync(id);
@@ -208,9 +207,17 @@ namespace SocialPlatformTime.Controllers
 
             ViewBag.CanChangeRole = false;
 
-            if (!ModelState.IsValid)
-            //if (!ModelState.IsValid || (updatedUser.ImageFile == null && string.IsNullOrEmpty(user.Image)))
+            bool isInvalid =
+                string.IsNullOrWhiteSpace(updatedUser.FirstName) ||
+                string.IsNullOrWhiteSpace(updatedUser.LastName) ||
+                string.IsNullOrWhiteSpace(updatedUser.ProfileDescription) ||
+                updatedUser.ImageFile == null;
+
+
+            if (!ModelState.IsValid || isInvalid)
             {
+                TempData["message"] = "Please complete all of the profile fields in order to continue.";
+                TempData["messageType"] = "alert-danger";
 
                 if (User.IsInRole("Administrator"))
                 {
@@ -316,9 +323,6 @@ namespace SocialPlatformTime.Controllers
             if (user.IsProfileComplete)
                 return RedirectToAction("Index", "Home");
 
-            ViewBag.Title = "Complete Your Profile";
-            ViewBag.Warning = "You must complete all required fields before continuing.";
-
             return View(user);
         }
 
@@ -332,7 +336,8 @@ namespace SocialPlatformTime.Controllers
             bool isInvalid =
                 string.IsNullOrWhiteSpace(model.FirstName) ||
                 string.IsNullOrWhiteSpace(model.LastName) ||
-                string.IsNullOrWhiteSpace(model.ProfileDescription);
+                string.IsNullOrWhiteSpace(model.ProfileDescription) ||
+                model.ImageFile == null;
 
             if (isInvalid)
             {
@@ -344,7 +349,16 @@ namespace SocialPlatformTime.Controllers
             user.FirstName = model.FirstName;
             user.LastName = model.LastName;
             user.ProfileDescription = model.ProfileDescription;
-            user.Image = model.Image;
+            if (model.ImageFile != null)
+            {
+                var fileName = Guid.NewGuid() + Path.GetExtension(model.ImageFile.FileName);
+                var filePath = Path.Combine("wwwroot/images", fileName);
+
+                using var stream = new FileStream(filePath, FileMode.Create);
+                await model.ImageFile.CopyToAsync(stream);
+
+                user.Image = "/images/" + fileName;
+            }
 
             await _userManager.UpdateAsync(user);
             
