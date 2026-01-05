@@ -55,8 +55,11 @@ namespace SocialPlatformTime.Controllers
 
             if (userWithPosts == null)
                 return NotFound();
+            // Non-Admin user tries to view Admin User Profile Page
+            else if (!User.IsInRole("Administrator") && await _userManager.IsInRoleAsync(userWithPosts, "Administrator"))
+                return Unauthorized();
 
-            // Can View <=> Profile is Public, is Owner of Profile or current User is an Admin
+                // Can View <=> Profile is Public, is Owner of Profile or current User is an Admin
             bool canView = (userWithPosts.IsPublic || (currUserId == id) || User.IsInRole("Administrator"));
             ViewBag.CanViewFullProfile = canView;
 

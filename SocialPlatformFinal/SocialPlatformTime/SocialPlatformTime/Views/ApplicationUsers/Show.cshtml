@@ -15,7 +15,6 @@
         <p><strong>Email:</strong> @user.Email</p>
         <p><strong>First Name:</strong> @user.FirstName</p>
         <p><strong>Last Name:</strong> @user.LastName</p>
-        <p><strong>Phone:</strong> @user.PhoneNumber</p>
         @if (!string.IsNullOrEmpty(user.Image))
         {
             <img src="@user.Image"
@@ -27,41 +26,7 @@
         {
             <p class="mt-3">@user.ProfileDescription</p>
         }
-        @if (!isCurrentUser)
-        {
-            <form method="post"
-                  asp-action="ToggleFollow"
-                  asp-route-id="@user.Id">
-                <button class="btn @(iFollow ? "btn-outline-danger" : "btn-primary")">
-                    @(iFollow ? "Unfollow" : "Follow")
-                </button>
-            </form>
-
-            <form method="post"
-                  asp-controller="Conversations"
-                  asp-action="New"
-                  asp-route-receiverId="@user.Id">
-                <button type="submit" class="btn btn-primary shadow-sm">
-                    <i class="bi bi-chat-fill me-2"></i> Send a message
-                </button>
-            </form>
-
-            <div class="mt-2">
-                @if (iFollow && followsMe)
-                {
-                    <span class="badge bg-success">Mutual following</span>
-                }
-                else if (iFollow)
-                {
-                    <span class="badge bg-primary">You follow this user</span>
-                }
-                else if (followsMe)
-                {
-                    <span class="badge bg-secondary">Follows you</span>
-                }
-            </div>
-        }
-        else
+        @if (isCurrentUser)
         {
             <a class="btn btn-outline-secondary"
                asp-action="Edit"
@@ -82,31 +47,6 @@
         }
     </div>
 </div>
-
-<hr />
-
-<h3>@user.UserName's Posts</h3>
-
-@if ((bool)ViewBag.CanViewFullProfile)
-{
-    @if (user.Posts == null || user.Posts.Count == 0)
-    {
-        <p>No posts yet.</p>
-    }
-    else
-    {
-        foreach (var post in user.Posts)
-        {
-            <partial name="PostInfo" model="post" />
-        }
-    }
-}
-else
-{
-    <div class="alert alert-info">
-        This profile is private.
-    </div>
-}
 
 @if (ViewBag.ShowFollowSystem && !isCurrentUser)
 {
@@ -131,5 +71,30 @@ else
         {
             <span class="badge bg-secondary">Follows you</span>
         }
+    </div>
+}
+
+<hr />
+
+<h3>@user.UserName's Posts</h3>
+
+@if ((bool)ViewBag.CanViewFullProfile)
+{
+    @if (user.Posts == null || user.Posts.Count == 0)
+    {
+        <p>No posts yet.</p>
+    }
+    else
+    {
+        foreach (var post in user.Posts)
+        {
+            <partial name="PostInfo" model="post" />
+        }
+    }
+}
+else
+{
+    <div class="alert alert-info">
+        This profile is private.
     </div>
 }
