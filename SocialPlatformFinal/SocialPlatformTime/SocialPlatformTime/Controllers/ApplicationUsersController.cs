@@ -59,8 +59,19 @@ namespace SocialPlatformTime.Controllers
             else if (!User.IsInRole("Administrator") && await _userManager.IsInRoleAsync(userWithPosts, "Administrator"))
                 return Unauthorized();
 
-                // Can View <=> Profile is Public, is Owner of Profile or current User is an Admin
-            bool canView = (userWithPosts.IsPublic || (currUserId == id) || User.IsInRole("Administrator"));
+           
+            // Can View <=> Profile is Public, is Owner of Profile, current User is an Admin SAU are follow acceptat
+            bool isAcceptedFollower = false;
+            if (currUserId != null)
+            {
+                isAcceptedFollower = _db.FollowRequests.Any(fr =>
+                    fr.FollowerId == currUserId &&
+                    fr.FollowingId == id &&
+                    fr.Status == "accepted");
+            }
+
+            bool canView = userWithPosts.IsPublic || (currUserId == id) || User.IsInRole("Administrator")|| isAcceptedFollower;
+
             ViewBag.CanViewFullProfile = canView;
 
             bool following = false; // whether they are following the current user
@@ -87,6 +98,34 @@ namespace SocialPlatformTime.Controllers
             ViewBag.FollowsMe = followed;
             ViewBag.IsCurrentUser = currUserId == id;
             ViewBag.ShowFollowSystem = !isEitherUserAdmin;
+
+            if (currUserId == id) // doar pe propriul profil
+            {
+                var followersList = _db.FollowRequests
+                    .Where(fr => fr.FollowingId == currUserId && fr.Status == "accepted")
+                    .Select(fr => fr.Follower)
+                    .ToList();
+
+                var followingList = _db.FollowRequests
+                    .Where(fr => fr.FollowerId == currUserId && fr.Status == "accepted")
+                    .Select(fr => fr.Following)
+                    .ToList();
+
+                ViewBag.FollowersList = followersList;
+                ViewBag.FollowingList = followingList;
+            }
+
+            // Cereri de follow PENDING primite de utilizatorul curent
+            if (currUserId == id) // doar pe propriul profil
+            {
+                var pendingRequests = _db.FollowRequests
+                    .Where(fr => fr.FollowingId == currUserId && fr.Status == "pending")
+                    .Include(fr => fr.Follower)
+                    .ToList();
+
+                ViewBag.PendingRequests = pendingRequests;
+            }
+
 
             // Setează SavedPostIds pentru utilizatorul curent
             if (User.Identity?.IsAuthenticated == true && currUserId != null)
@@ -366,6 +405,133 @@ namespace SocialPlatformTime.Controllers
             TempData["messageType"] = "alert-success";
             
             return RedirectToAction("Index", "Home");
+        }
+
+        [Authorize]
+        [HttpPost]
+        public async Task<IActionResult> ToggleFollow(string id)
+        {
+            var currUserId = _userManager.GetUserId(User);
+
+            if (currUserId == null || id == null || currUserId == id)
+            {
+                return RedirectToAction("Show", new { id });
+            }
+
+            var targetUser = await _userManager.FindByIdAsync(id);
+            if (targetUser == null)
+            {
+                return NotFound();
+            }
+
+            var existing = _db.FollowRequests
+                .FirstOrDefault(fr => fr.FollowerId == currUserId && fr.FollowingId == id);
+
+            // Profil PUBLIC => follow direct (accepted) / unfollow
+            if (targetUser.IsPublic)
+            {
+                if (existing == null)
+                {
+                    // Follow direct
+                    var fr = new FollowRequest
+                    {
+                        FollowerId = currUserId,
+                        FollowingId = id,
+                        Status = "accepted"
+                    };
+                    _db.FollowRequests.Add(fr);
+                    TempData["message"] = "You are now following this user.";
+                    TempData["messageType"] = "alert-success";
+                }
+                else if (existing.Status == "accepted")
+                {
+                    // Unfollow
+                    _db.FollowRequests.Remove(existing);
+                    TempData["message"] = "You have unfollowed this user.";
+                    TempData["messageType"] = "alert-info";
+                }
+                else
+                {
+                    // Orice alt status -> îl facem accepted
+                    existing.Status = "accepted";
+                    TempData["message"] = "You are now following this user.";
+                    TempData["messageType"] = "alert-success";
+                }
+            }
+            else
+            {
+                // Profil PRIVAT => Pending până la acceptare
+                if (existing == null)
+                {
+                    var fr = new FollowRequest
+                    {
+                        FollowerId = currUserId,
+                        FollowingId = id,
+                        Status = "pending"
+                    };
+                    _db.FollowRequests.Add(fr);
+                    TempData["message"] = "Follow request sent.";
+                    TempData["messageType"] = "alert-info";
+                }
+                else if (existing.Status == "pending")
+                {
+                    _db.FollowRequests.Remove(existing);
+                    TempData["message"] = "Follow request cancelled.";
+                    TempData["messageType"] = "alert-warning";
+                }
+                else if (existing.Status == "accepted")
+                {
+                    // Unfollow
+                    _db.FollowRequests.Remove(existing);
+                    TempData["message"] = "You have unfollowed this user.";
+                    TempData["messageType"] = "alert-info";
+                }
+                else
+                {
+                    // rejected sau altceva -> recreăm pending
+                    existing.Status = "pending";
+                    TempData["message"] = "Follow request sent again.";
+                    TempData["messageType"] = "alert-info";
+                }
+            }
+
+            await _db.SaveChangesAsync();
+            return RedirectToAction("Show", new { id });
+        }
+
+        [Authorize]
+        [HttpPost]
+        public async Task<IActionResult> RespondFollow(int requestId, string decision)
+        {
+            var currUserId = _userManager.GetUserId(User);
+
+            var request = _db.FollowRequests
+                .Include(fr => fr.Follower)
+                .FirstOrDefault(fr => fr.Id == requestId);
+
+            if (request == null)
+                return NotFound();
+
+            // Doar utilizatorul care PRIMEȘTE cererea poate decide
+            if (request.FollowingId != currUserId)
+                return Forbid();
+
+            if (decision == "accept")
+            {
+                request.Status = "accepted";
+                TempData["message"] = $"You accepted {request.Follower.UserName}'s follow request.";
+                TempData["messageType"] = "alert-success";
+            }
+            else if (decision == "reject")
+            {
+                // fie ștergem cererea, fie setam Status = "rejected"
+                request.Status = "rejected";
+                TempData["message"] = $"You rejected {request.Follower.UserName}'s follow request.";
+                TempData["messageType"] = "alert-warning";
+            }
+
+            await _db.SaveChangesAsync();
+            return RedirectToAction("Show", new { id = currUserId });
         }
 
     }

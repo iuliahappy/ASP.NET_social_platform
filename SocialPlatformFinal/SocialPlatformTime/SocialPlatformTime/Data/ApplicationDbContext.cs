@@ -116,7 +116,7 @@ namespace SocialPlatformTime.Data
 
             // se intampla acelsi lucru si cu Reaction (User->Reaction, User->Post->Reaction)
             // rezolvare prin oprirea stergerii in cascada pe relatia User -> Reaction, rezolvam in Controller 
-            // CONFIGURARE PENTRU REACTION (Liking)
+            // CONFIGURARE PENTRU REACTION
             modelBuilder.Entity<Reaction>()
                 .HasOne(r => r.ApplicationUser)
                 .WithMany(r => r.Reactions)
