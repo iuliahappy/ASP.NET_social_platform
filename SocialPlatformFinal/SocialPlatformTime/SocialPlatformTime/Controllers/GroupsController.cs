@@ -103,5 +103,47 @@ namespace SocialPlatformTime.Controllers
 
             return RedirectToAction("Show", "Conversations", new { id = groupConversation.Id });
         }
+
+        [HttpPost]
+        public IActionResult AddUserToGroup(int groupId, string newUserId)
+        {
+            var currentUserId = _userManager.GetUserId(User);
+
+            var currentUserRole = _db.GroupRoles
+                                    .FirstOrDefault(gr => gr.GroupId == groupId && gr.ApplicationUserId == currentUserId);
+
+            if (currentUserRole == null || currentUserRole.RoleName != "Owner")
+            {
+                return Forbid();
+            }
+
+            var isAlreadyMember = _db.UserConversations
+                                    .Any(uc => uc.ApplicationUserId == newUserId && uc.Conversation.GroupId == groupId);
+
+            if (isAlreadyMember) return BadRequest("User is already in the group.");
+
+            var conversation = _db.Conversations
+                                    .FirstOrDefault(c => c.GroupId == groupId);
+
+            if (conversation == null) return NotFound();
+
+            _db.UserConversations.Add(new UserConversation
+            {
+                ApplicationUserId = newUserId,
+                ConversationId = conversation.Id,
+                LastEntry = DateTime.Now
+            });
+
+            _db.GroupRoles.Add(new RoleTable
+            {
+                ApplicationUserId = newUserId,
+                GroupId = groupId,
+                RoleName = "Member"
+            });
+
+            _db.SaveChanges();
+
+            return RedirectToAction("Show", "Conversations", new { id = conversation.Id });
+        }
     }
 }
