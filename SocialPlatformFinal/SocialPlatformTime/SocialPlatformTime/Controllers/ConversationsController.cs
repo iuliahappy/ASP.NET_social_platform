@@ -18,6 +18,7 @@ namespace SocialPlatformTime.Controllers
             var currentUserId = _userManager.GetUserId(User);
 
             var conversations = _db.Conversations
+                .Include(c => c.Group)
                 .Include(c => c.UserConversations)
                     .ThenInclude(uc => uc.ApplicationUser)
                 .Include(c => c.Messages)
@@ -26,24 +27,6 @@ namespace SocialPlatformTime.Controllers
 
             return View(conversations);
         }
-
-        //public IActionResult Show(int id)
-        //{
-        //    var currentUserId = _userManager.GetUserId(User);
-
-        //    var messages = _db.Messages
-        //                        .Include(m => m.ApplicationUser) 
-        //                        .Where(m => m.ConversationId == id)
-        //                        .Where(m => m.Conversation.UserConversations.Any(uc => uc.UserId == currentUserId))
-        //                        .OrderBy(m => m.dateTime)
-        //                        .ToList();
-
-        //    //To put a different color to the user loged
-        //    ViewBag.CurrentUserId = currentUserId;
-        //    ViewBag.ConversationId = id;
-
-        //    return View(messages);
-        //}
 
         public IActionResult Show(int id)
         {
@@ -105,7 +88,7 @@ namespace SocialPlatformTime.Controllers
             var currentUserId = _userManager.GetUserId(User);
 
             var conversationId = _db.UserConversations
-                                    .Where(uc => uc.ApplicationUserId == currentUserId || uc.ApplicationUserId == receiverId)
+                                    .Where(uc => (uc.ApplicationUserId == currentUserId || uc.ApplicationUserId == receiverId) && uc.Conversation.GroupId==null)
                                     .GroupBy(uc => uc.ConversationId)
                                     .Where(g => g.Count() == 2)
                                     .Select(g => g.Key)
