@@ -131,8 +131,81 @@ namespace SocialPlatformTime.Controllers
             return RedirectToAction("Index");
         }
 
+        [Authorize(Roles = "Registered_User,Administrator")]
+        public IActionResult PendingList()
+        {
+            var currentUserId = _userManager.GetUserId(User);
+
+            var myOwnedGroupIds = _db.GroupRoles
+                .Where(gr => gr.ApplicationUserId == currentUserId && gr.RoleName == "Owner")
+                .Select(gr => gr.GroupId)
+                .ToList();
+
+            var pendingRequests = _db.GroupRoles
+                .Include(gr => gr.Group)
+                .Include(gr => gr.ApplicationUser)
+                .Where(gr => myOwnedGroupIds.Contains(gr.GroupId) && gr.RoleName == "Pending")
+                .ToList()
+                .GroupBy(gr => gr.Group.Name);
+
+            return View(pendingRequests);
+        }
+
+        [Authorize(Roles = "Registered_User,Administrator")]
+        [HttpPost]
+        public IActionResult PendingResponse(int requestId, bool response)
+        {
+            var currentUserId = _userManager.GetUserId(User);
+
+            var request = _db.GroupRoles
+                .Include(gr => gr.Group)
+                .ThenInclude(g => g.Conversation)
+                .FirstOrDefault(gr => gr.Id == requestId);
+
+            if (request == null)
+            {
+                return NotFound("The request wasn't found!");
+            }
+
+            var isOwner = _db.GroupRoles.Any(gr =>
+                gr.GroupId == request.GroupId &&
+                gr.ApplicationUserId == currentUserId &&
+                gr.RoleName == "Owner");
+
+            if (!isOwner)
+            {
+                return Forbid();
+            }
+
+            if (response)
+            {
+                request.RoleName = "Member";
+
+                if (request.Group?.Conversation != null)
+                {
+                    var userConv = new UserConversation
+                    {
+                        ApplicationUserId = request.ApplicationUserId,
+                        ConversationId = request.Group.Conversation.Id,
+                        LastEntry = DateTime.Now
+                    };
+                    _db.UserConversations.Add(userConv);
+                }
+                TempData["messageSend"] = $"The user was accepted in {request.Group.Name}.";
+            }
+            else
+            {
+                _db.GroupRoles.Remove(request);
+                TempData["messageSend"] = "The request has been declined.";
+            }
+
+            _db.SaveChanges();
+            return RedirectToAction("PendingList");
+        }
+
         [HttpPost]
         [ValidateAntiForgeryToken]
+        [Authorize(Roles = "Registered_User,Administrator")]
         public IActionResult New(string groupName)
         {
             if (string.IsNullOrWhiteSpace(groupName))
@@ -174,48 +247,6 @@ namespace SocialPlatformTime.Controllers
             _db.SaveChanges();
 
             return RedirectToAction("Show", "Conversations", new { id = groupConversation.Id });
-        }
-
-        [HttpPost]
-        public IActionResult AddUserToGroup(int groupId, string newUserId)
-        {
-            var currentUserId = _userManager.GetUserId(User);
-
-            var currentUserRole = _db.GroupRoles
-                                    .FirstOrDefault(gr => gr.GroupId == groupId && gr.ApplicationUserId == currentUserId);
-
-            if (currentUserRole == null || currentUserRole.RoleName != "Owner")
-            {
-                return Forbid();
-            }
-
-            var isAlreadyMember = _db.UserConversations
-                                    .Any(uc => uc.ApplicationUserId == newUserId && uc.Conversation.GroupId == groupId);
-
-            if (isAlreadyMember) return BadRequest("User is already in the group.");
-
-            var conversation = _db.Conversations
-                                    .FirstOrDefault(c => c.GroupId == groupId);
-
-            if (conversation == null) return NotFound();
-
-            _db.UserConversations.Add(new UserConversation
-            {
-                ApplicationUserId = newUserId,
-                ConversationId = conversation.Id,
-                LastEntry = DateTime.Now
-            });
-
-            _db.GroupRoles.Add(new RoleTable
-            {
-                ApplicationUserId = newUserId,
-                GroupId = groupId,
-                RoleName = "Member"
-            });
-
-            _db.SaveChanges();
-
-            return RedirectToAction("Show", "Conversations", new { id = conversation.Id });
         }
     }
 }

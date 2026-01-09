@@ -5,6 +5,7 @@
       "resourceId": null,
       "type": "mssql.local",
       "connectionId": "ConnectionStrings:SocialPlatformTimeDBFinalYey"
+
     }
   }
 }
