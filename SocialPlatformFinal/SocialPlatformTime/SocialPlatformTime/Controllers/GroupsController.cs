@@ -248,5 +248,36 @@ namespace SocialPlatformTime.Controllers
 
             return RedirectToAction("Show", "Conversations", new { id = groupConversation.Id });
         }
+
+        [Authorize(Roles = "Registered_User,Administrator")]
+        [HttpPost]
+        public IActionResult ModifyDescription(int groupId, string newDescription)
+        {
+            var currentUserId = _userManager.GetUserId(User);
+
+            // Adăugăm .Include(g => g.Conversation) pentru a evita NullReferenceException
+            var group = _db.Groups
+                           .Include(g => g.Conversation)
+                           .FirstOrDefault(g => g.Id == groupId);
+
+            var isOwner = _db.GroupRoles.Any(gr =>
+                gr.GroupId == groupId &&
+                gr.ApplicationUserId == currentUserId &&
+                gr.RoleName == "Owner");
+
+            // Verificăm dacă grupul există și dacă este owner sau admin
+            if (group == null || (!isOwner && !User.IsInRole("Administrator")))
+            {
+                return Forbid();
+            }
+
+            group.Description = newDescription;
+            _db.SaveChanges();
+
+            TempData["messageSend"] = "The group description has been successfully modified!";
+
+            // Acum group.Conversation nu mai este null
+            return RedirectToAction("Show", "Conversations", new { id = group.Conversation.Id });
+        }
     }
 }
