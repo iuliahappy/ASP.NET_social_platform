@@ -82,12 +82,13 @@
                                 </div>
 
                                 <div class="d-flex gap-2">
-                                    <form asp-action="AcceptRequest" asp-route-requestId="@request.Id" method="post" class="flex-grow-1">
+                                    <form asp-action="PendingResponse" asp-route-requestId="@request.Id" asp-route-response="true" method="post" class="flex-grow-1">
                                         <button type="submit" class="btn btn-primary btn-sm w-100 rounded-pill">
                                             Accept
                                         </button>
                                     </form>
-                                    <form asp-action="DeclineRequest" asp-route-requestId="@request.Id" method="post" class="flex-grow-1">
+
+                                    <form asp-action="PendingResponse" asp-route-requestId="@request.Id" asp-route-response="false" method="post" class="flex-grow-1">
                                         <button type="submit" class="btn btn-outline-danger btn-sm w-100 rounded-pill">
                                             Decline
                                         </button>
