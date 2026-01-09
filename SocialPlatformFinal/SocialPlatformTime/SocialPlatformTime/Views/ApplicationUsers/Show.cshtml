@@ -116,6 +116,12 @@
     </div>
 </div>
 
+<div>
+    <form asp-controller="Conversations" asp-action="New" asp-route-receiverId="@user.Id" method="post">
+        <button type="submit" class="btn btn-primary">Message</button>
+    </form>
+</div>
+
 
 
     @if (ViewBag.ShowFollowSystem && !isCurrentUser)

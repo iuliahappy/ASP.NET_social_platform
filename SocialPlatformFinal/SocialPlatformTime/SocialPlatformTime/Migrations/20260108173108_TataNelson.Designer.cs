@@ -12,8 +12,8 @@ using SocialPlatformTime.Data;
 namespace SocialPlatformTime.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    [Migration("20260108071200_TryAfterDeletingTables")]
-    partial class TryAfterDeletingTables
+    [Migration("20260108173108_TataNelson")]
+    partial class TataNelson
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)

@@ -6,7 +6,7 @@ using Microsoft.EntityFrameworkCore.Migrations;
 namespace SocialPlatformTime.Migrations
 {
     /// <inheritdoc />
-    public partial class TryAfterDeletingTables : Migration
+    public partial class TataNelson : Migration
     {
         /// <inheritdoc />
         protected override void Up(MigrationBuilder migrationBuilder)
