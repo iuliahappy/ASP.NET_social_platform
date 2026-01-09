@@ -1,8 +1,11 @@
-﻿using Microsoft.AspNetCore.Identity;
+﻿using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
 using NuGet.Protocol.Plugins;
 using SocialPlatformTime.Data;
 using SocialPlatformTime.Models;
+using System.Security.Claims;
 
 namespace SocialPlatformTime.Controllers
 {
@@ -58,6 +61,75 @@ namespace SocialPlatformTime.Controllers
 
         //    return RedirectToAction("Show", "Conversations", new { id = groupConversation.Id });
         //}
+
+        [Authorize(Roles = "Registered_User,Administrator")]
+        public IActionResult Index()
+        {
+            var currentUserId = _userManager.GetUserId(User);
+
+            var groupsNotJoined = _db.Groups
+                .Where(g => !g.RoleTables.Any(r => r.ApplicationUserId == currentUserId))
+                .ToList();
+
+            return View(groupsNotJoined);
+        }
+
+        [Authorize(Roles = "Registered_User,Administrator")]
+        [HttpPost]
+        public IActionResult Join(int id)
+        {
+            var currentUser = _userManager.GetUserId(User);
+
+            var group = _db.Groups
+                           .Include(g => g.Conversation)
+                           .FirstOrDefault(g => g.Id == id);
+
+            if (group == null)
+            {
+                return NotFound("The group wasn't found!");
+            }
+
+            var existingRole = _db.GroupRoles
+                                 .FirstOrDefault(gr => gr.ApplicationUserId == currentUser && gr.GroupId == id);
+
+            if (existingRole == null)
+            {
+                string assignedRole = User.IsInRole("Administrator") ? "Owner" : "Pending";
+
+                var newRole = new RoleTable
+                {
+                    ApplicationUserId = currentUser,
+                    GroupId = id,
+                    RoleName = assignedRole
+                };
+                _db.GroupRoles.Add(newRole);
+
+                if (assignedRole == "Owner")
+                {
+                    if (group.Conversation != null)
+                    {
+                        var newUserConv = new UserConversation
+                        {
+                            ApplicationUserId = currentUser,
+                            ConversationId = group.Conversation.Id,
+                            LastEntry = DateTime.Now
+                        };
+
+                        _db.UserConversations.Add(newUserConv);
+                    }
+
+                    TempData["messageSend"] = $"As an Administrator, you have been added as Owner of '{group.Name}'.";
+                }
+                else
+                {
+                    TempData["messageSend"] = $"Your request to join '{group.Name}' has been sent!";
+                }
+
+                _db.SaveChanges();
+            }
+
+            return RedirectToAction("Index");
+        }
 
         [HttpPost]
         [ValidateAntiForgeryToken]
