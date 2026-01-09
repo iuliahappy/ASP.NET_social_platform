@@ -255,7 +255,6 @@ namespace SocialPlatformTime.Controllers
         {
             var currentUserId = _userManager.GetUserId(User);
 
-            // Adăugăm .Include(g => g.Conversation) pentru a evita NullReferenceException
             var group = _db.Groups
                            .Include(g => g.Conversation)
                            .FirstOrDefault(g => g.Id == groupId);
@@ -265,7 +264,6 @@ namespace SocialPlatformTime.Controllers
                 gr.ApplicationUserId == currentUserId &&
                 gr.RoleName == "Owner");
 
-            // Verificăm dacă grupul există și dacă este owner sau admin
             if (group == null || (!isOwner && !User.IsInRole("Administrator")))
             {
                 return Forbid();
@@ -276,17 +274,15 @@ namespace SocialPlatformTime.Controllers
 
             TempData["messageSend"] = "The group description has been successfully modified!";
 
-            // Acum group.Conversation nu mai este null
             return RedirectToAction("Show", "Conversations", new { id = group.Conversation.Id });
         }
 
-        [Authorize(Roles = "Registered_User,Administrator")] // Permitem accesul inițial ambelor categorii
+        [Authorize(Roles = "Registered_User,Administrator")]
         [HttpPost]
         public IActionResult Delete(int id)
         {
             var currentUserId = _userManager.GetUserId(User);
 
-            // 1. Găsim grupul și includem conversația
             var group = _db.Groups
                            .Include(g => g.Conversation)
                            .FirstOrDefault(g => g.Id == id);
@@ -296,7 +292,6 @@ namespace SocialPlatformTime.Controllers
                 return NotFound();
             }
 
-            // 2. Verificăm dacă utilizatorul are dreptul de a șterge
             bool isAdmin = User.IsInRole("Administrator");
             bool isOwner = _db.GroupRoles.Any(gr =>
                 gr.GroupId == id &&
@@ -305,31 +300,130 @@ namespace SocialPlatformTime.Controllers
 
             if (!isAdmin && !isOwner)
             {
-                return Forbid(); // Returnăm 403 dacă nu este nici admin, nici owner
+                return Forbid();
             }
 
-            // 3. Ștergem rolurile din grup (GroupRoles)
             var roles = _db.GroupRoles.Where(rt => rt.GroupId == id);
             _db.GroupRoles.RemoveRange(roles);
 
-            // 4. Curățăm datele asociate conversației
             if (group.Conversation != null)
             {
                 int convId = group.Conversation.Id;
 
-                // Ștergem mesajele
                 var messages = _db.Messages.Where(m => m.ConversationId == convId);
                 _db.Messages.RemoveRange(messages);
 
-                // Ștergem asocierile utilizatorilor
                 var userConvs = _db.UserConversations.Where(uc => uc.ConversationId == convId);
                 _db.UserConversations.RemoveRange(userConvs);
 
-                // Ștergem conversația
                 _db.Conversations.Remove(group.Conversation);
             }
 
-            // 5. Ștergem grupul și salvăm
+            _db.Groups.Remove(group);
+            _db.SaveChanges();
+
+            TempData["message"] = "The group and all associated data have been deleted.";
+
+            return RedirectToAction("Index", "Conversations");
+        }
+
+        [Authorize(Roles = "Registered_User,Administrator")]
+        [HttpPost]
+        public IActionResult Leave(int id) // id este GroupId
+        {
+            var currentUserId = _userManager.GetUserId(User);
+
+            // 1. Găsim grupul pentru a identifica conversația asociată
+            var group = _db.Groups
+                           .Include(g => g.Conversation)
+                           .FirstOrDefault(g => g.Id == id);
+
+            if (group == null)
+            {
+                return NotFound();
+            }
+
+            var nrOwners = _db.GroupRoles
+                                .Where(gr => gr.RoleName == "Owner" && gr.GroupId == id)
+                                .Count();
+            var isOwner = _db.GroupRoles
+                                .Any(gr => gr.RoleName == "Owner" 
+                                && gr.GroupId == id 
+                                && gr.ApplicationUserId == currentUserId);
+
+            if (nrOwners == 1 && isOwner)
+            {
+                return DeleteInternal(group.Id);
+            }
+
+            // 2. Ștergem rolul utilizatorului din acest grup
+            var userRole = _db.GroupRoles
+                              .FirstOrDefault(gr => gr.GroupId == id && gr.ApplicationUserId == currentUserId);
+
+            if (userRole != null)
+            {
+                _db.GroupRoles.Remove(userRole);
+            }
+
+            // 3. Ștergem accesul utilizatorului la conversația grupului
+            if (group.Conversation != null)
+            {
+                var userConv = _db.UserConversations
+                                  .FirstOrDefault(uc => uc.ConversationId == group.Conversation.Id && uc.ApplicationUserId == currentUserId);
+
+                if (userConv != null)
+                {
+                    _db.UserConversations.Remove(userConv);
+                }
+            }
+
+            _db.SaveChanges();
+
+            TempData["message"] = "You have successfully left the group: " + group.Name;
+
+            return RedirectToAction("Index", "Conversations");
+        }
+
+        private IActionResult DeleteInternal(int id)
+        {
+            var currentUserId = _userManager.GetUserId(User);
+
+            var group = _db.Groups
+                           .Include(g => g.Conversation)
+                           .FirstOrDefault(g => g.Id == id);
+
+            if (group == null)
+            {
+                return NotFound();
+            }
+
+            bool isAdmin = User.IsInRole("Administrator");
+            bool isOwner = _db.GroupRoles.Any(gr =>
+                gr.GroupId == id &&
+                gr.ApplicationUserId == currentUserId &&
+                gr.RoleName == "Owner");
+
+            if (!isAdmin && !isOwner)
+            {
+                return Forbid();
+            }
+
+            var roles = _db.GroupRoles.Where(rt => rt.GroupId == id);
+            _db.GroupRoles.RemoveRange(roles);
+
+            if (group.Conversation != null)
+            {
+                int convId = group.Conversation.Id;
+
+                var messages = _db.Messages.Where(m => m.ConversationId == convId);
+                _db.Messages.RemoveRange(messages);
+
+                var userConvs = _db.UserConversations.Where(uc => uc.ConversationId == convId);
+                _db.UserConversations.RemoveRange(userConvs);
+
+                _db.Conversations.Remove(group.Conversation);
+            }
+
             _db.Groups.Remove(group);
             _db.SaveChanges();
 
