@@ -35,5 +35,14 @@ namespace SocialPlatformTime.Models
 
         [NotMapped]
         public IFormFile? VideoFile { get; set; }
+
+
+        //// CAMPURI NOI PENTRU ANALIZA DE SENTIMENT
+        // Eticheta sentimentului: "positive", "neutral", "negative"
+        public string? SentimentLabel { get; set; }
+        // Scorul de incredere: valoare intre 0.0 si 1.0
+        public double? SentimentConfidence { get; set; }
+        // Data si ora la care s-a efectuat analiza
+        public DateTime? SentimentAnalyzedAt { get; set; }
     }
 }

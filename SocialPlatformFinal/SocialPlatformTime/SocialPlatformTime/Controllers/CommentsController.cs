@@ -5,14 +5,18 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Hosting;
 using SocialPlatformTime.Data;
 using SocialPlatformTime.Models;
+using SocialPlatformTime.Services;
+
+
 
 namespace Social_Platform.Controllers
 {
-    public class CommentsController(ApplicationDbContext context, UserManager<ApplicationUser> userManager, RoleManager<IdentityRole> roleManager) : Controller
+    public class CommentsController(ApplicationDbContext context, UserManager<ApplicationUser> userManager, RoleManager<IdentityRole> roleManager, ISentimentAnalysisService sentimentService) : Controller
     {
         private readonly ApplicationDbContext _db = context;
         private readonly UserManager<ApplicationUser> _userManager = userManager;
         private readonly RoleManager<IdentityRole> _roleManager = roleManager;
+        private readonly ISentimentAnalysisService _sentimentService = sentimentService;
 
         public IActionResult Index(int id)
         {
@@ -30,12 +34,9 @@ namespace Social_Platform.Controllers
             return View(comments);
         }
 
-
-
-
         //// Add a comm for an asociated post
         [HttpPost]
-        public IActionResult New(Comment comm)
+        public async Task<IActionResult> New(Comment comm)
         {
             comm.Date = DateTime.Now;
             comm.ApplicationUserId = _userManager.GetUserId(User);
@@ -43,6 +44,16 @@ namespace Social_Platform.Controllers
 
             if (ModelState.IsValid)
             {
+                // Analizam sentimentul comentariului folosind GoogleAI API
+                var sentimentResult = await _sentimentService.AnalyzeSentimentAsync(comm.CommentBody);
+
+                if (sentimentResult.Success)
+                {
+                    comm.SentimentLabel = sentimentResult.Label;
+                    comm.SentimentConfidence = sentimentResult.Confidence;
+                    comm.SentimentAnalyzedAt = DateTime.Now;
+                }
+
                 comm.ApplicationUserId = _userManager.GetUserId(User);
                 _db.Comments.Add(comm);
                 _db.SaveChanges();
@@ -50,16 +61,38 @@ namespace Social_Platform.Controllers
             }
             else
             {
-                //foreach (var modelState in ModelState.Values)
-                //{
-                //    foreach (var error in modelState.Errors)
-                //    {
-                //        Console.WriteLine("Eroare: " + error.ErrorMessage);
-                //    }
-                //}
                 return Redirect("/Posts/Show/" + comm.PostId);
             }
         }
+
+
+        ////// Add a comm for an asociated post
+        //[HttpPost]
+        //public IActionResult New(Comment comm)
+        //{
+        //    comm.Date = DateTime.Now;
+        //    comm.ApplicationUserId = _userManager.GetUserId(User);
+        //    ModelState.Remove("ApplicationUserId");
+
+        //    if (ModelState.IsValid)
+        //    {
+        //        comm.ApplicationUserId = _userManager.GetUserId(User);
+        //        _db.Comments.Add(comm);
+        //        _db.SaveChanges();
+        //        return Redirect("/Posts/Show/" + comm.PostId);
+        //    }
+        //    else
+        //    {
+        //        //foreach (var modelState in ModelState.Values)
+        //        //{
+        //        //    foreach (var error in modelState.Errors)
+        //        //    {
+        //        //        Console.WriteLine("Eroare: " + error.ErrorMessage);
+        //        //    }
+        //        //}
+        //        return Redirect("/Posts/Show/" + comm.PostId);
+        //    }
+        //}
 
 
         // In acest moment vom implementa editarea intr-o pagina View separata

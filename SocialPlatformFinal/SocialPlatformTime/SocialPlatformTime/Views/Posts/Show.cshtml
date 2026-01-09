@@ -60,6 +60,34 @@
                     }
                     <strong><i class="bi bi-person"></i> @comm.ApplicationUser.UserName</strong>
 
+                    @* Afisare eticheta sentiment - vizibila doar pentru Admin *@
+
+                    @if (ViewBag.EsteAdmin == true && comm.SentimentLabel != null)
+                    {
+                        var badgeClass = comm.SentimentLabel switch
+                        {
+                            "positive" => "bg-success",
+                            "negative" => "bg-danger",
+                            _ => "bg-secondary"
+                        };
+                        var sentimentIcon = comm.SentimentLabel switch
+                        {
+                            "positive" => "bi-emoji-smile",
+                            "negative" => "bi-emoji-frown",
+                            _ => "bi-emoji-neutral"
+                        };
+
+                        <span class="badge @badgeClass ms-2">
+                            <i class="bi @sentimentIcon"></i>
+                            @comm.SentimentLabel
+                            (@(comm.SentimentConfidence?.ToString("P0")))
+                        </span>
+                    }
+                    else if (ViewBag.EsteAdmin == true)
+                        {
+                        <span class="badge bg-warning ms-2">No sentiment analyzed</span>
+                        }
+
                 </div>
                 <br>
 

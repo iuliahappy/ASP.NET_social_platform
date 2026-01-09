@@ -5,14 +5,16 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using SocialPlatformTime.Data;
 using SocialPlatformTime.Models;
+using SocialPlatformTime.Services;
 
 namespace Social_Platform.Controllers
 {
-    public class PostsController(ApplicationDbContext context, UserManager<ApplicationUser> userManager, RoleManager<IdentityRole> roleManager) : Controller
+    public class PostsController(ApplicationDbContext context, UserManager<ApplicationUser> userManager, RoleManager<IdentityRole> roleManager, ISentimentAnalysisService sentimentService) : Controller
     {
         private readonly ApplicationDbContext _db = context;
         private readonly UserManager<ApplicationUser> _userManager = userManager;
         private readonly RoleManager<IdentityRole> _roleManager = roleManager;
+        private readonly ISentimentAnalysisService _sentimentService = sentimentService;
 
 
         // Se afiseaza lista tuturor postarilor 
@@ -318,7 +320,7 @@ namespace Social_Platform.Controllers
         // add a comment = write operation => we use HttpPost
         [HttpPost]
         [Authorize(Roles ="Registered_User, Administrator")]
-        public IActionResult Show([FromForm] Comment comm)
+        public async Task<IActionResult> Show([FromForm] Comment comm)
         {
             comm.Date = DateTime.Now;
 
@@ -328,6 +330,17 @@ namespace Social_Platform.Controllers
 
             if (ModelState.IsValid)
             {
+                // Analizam sentimentul comentariului folosind GoogleAI API
+                var sentimentResult = await _sentimentService.AnalyzeSentimentAsync(comm.CommentBody);
+
+                if (sentimentResult.Success)
+                {
+                    comm.SentimentLabel = sentimentResult.Label;
+                    comm.SentimentConfidence =
+                    sentimentResult.Confidence;
+                    comm.SentimentAnalyzedAt = DateTime.Now;
+                }
+
                 _db.Comments.Add(comm);
                 _db.SaveChanges();
                 return Redirect("/Posts/Show/" + comm.PostId);

@@ -3,6 +3,7 @@ using Microsoft.EntityFrameworkCore;
 using SocialPlatformTime.Data;
 using SocialPlatformTime.Middleware;
 using SocialPlatformTime.Models;
+using SocialPlatformTime.Services;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -16,6 +17,10 @@ builder.Services.AddDefaultIdentity<ApplicationUser>(options => options.SignIn.R
     .AddRoles<IdentityRole>()
     .AddEntityFrameworkStores<ApplicationDbContext>();
 builder.Services.AddControllersWithViews();
+
+
+builder.Services.AddScoped<ISentimentAnalysisService, GoogleSentimentAnalysisService>();
+
 
 var app = builder.Build();
 
@@ -58,3 +63,6 @@ app.MapRazorPages()
    .WithStaticAssets();
 
 app.Run();
+
+
+
