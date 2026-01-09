@@ -12,8 +12,8 @@ using SocialPlatformTime.Data;
 namespace SocialPlatformTime.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    [Migration("20260108200330_AddSentimentToCommentsAndPosts")]
-    partial class AddSentimentToCommentsAndPosts
+    [Migration("20260109152548_NEW")]
+    partial class NEW
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)

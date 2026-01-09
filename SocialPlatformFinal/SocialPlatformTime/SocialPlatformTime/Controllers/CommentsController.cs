@@ -8,15 +8,17 @@ using SocialPlatformTime.Models;
 using SocialPlatformTime.Services;
 
 
-
 namespace Social_Platform.Controllers
 {
-    public class CommentsController(ApplicationDbContext context, UserManager<ApplicationUser> userManager, RoleManager<IdentityRole> roleManager, ISentimentAnalysisService sentimentService) : Controller
+    public class CommentsController(ApplicationDbContext context, UserManager<ApplicationUser> userManager, RoleManager<IdentityRole> roleManager, ISentimentAnalysisService sentimentService, IContentModerationService contentModerationService, ILogger<CommentsController> logger) : Controller
     {
         private readonly ApplicationDbContext _db = context;
         private readonly UserManager<ApplicationUser> _userManager = userManager;
         private readonly RoleManager<IdentityRole> _roleManager = roleManager;
         private readonly ISentimentAnalysisService _sentimentService = sentimentService;
+        private readonly IContentModerationService _contentModerationService = contentModerationService;
+        private readonly ILogger<CommentsController> _logger = logger;
+
 
         public IActionResult Index(int id)
         {
@@ -24,7 +26,7 @@ namespace Social_Platform.Controllers
                             .Where(c => c.PostId == id)
                             .Include(c => c.ApplicationUser)
                             .OrderByDescending(p => p.Date)
-                            .ToList();  
+                            .ToList();
 
             ViewBag.PostId = id; // îl folosim în formularul de adăugare comentariu
             ViewBag.Comments = comments;
@@ -35,6 +37,7 @@ namespace Social_Platform.Controllers
         }
 
         //// Add a comm for an asociated post
+        //nou
         [HttpPost]
         public async Task<IActionResult> New(Comment comm)
         {
@@ -44,7 +47,25 @@ namespace Social_Platform.Controllers
 
             if (ModelState.IsValid)
             {
-                // Analizam sentimentul comentariului folosind GoogleAI API
+                // Verificăm conținutul comentariului pentru limbaj nepotrivit
+                if (!string.IsNullOrWhiteSpace(comm.CommentBody))
+                {
+                    var moderationResult = await _contentModerationService.ModerateContentAsync(comm.CommentBody);
+
+                    if (!moderationResult.Success)
+                    {
+                        _logger.LogWarning("Eroare la moderarea comentariului: {Error}", moderationResult.ErrorMessage);
+                    }
+                    else if (!moderationResult.IsAppropriate)
+                    {
+                        // Comentariul este neadecvat - blocăm publicarea
+                        TempData["message"] = "Conținutul tău conține termeni nepotriviți. Te rugăm să reformulezi.";
+                        TempData["messageType"] = "alert-danger";
+                        return Redirect("/Posts/Show/" + comm.PostId);
+                    }
+                }
+
+                // Dacă conținutul este adecvat, continuăm cu analiza de sentiment
                 var sentimentResult = await _sentimentService.AnalyzeSentimentAsync(comm.CommentBody);
 
                 if (sentimentResult.Success)
@@ -64,35 +85,7 @@ namespace Social_Platform.Controllers
                 return Redirect("/Posts/Show/" + comm.PostId);
             }
         }
-
-
-        ////// Add a comm for an asociated post
-        //[HttpPost]
-        //public IActionResult New(Comment comm)
-        //{
-        //    comm.Date = DateTime.Now;
-        //    comm.ApplicationUserId = _userManager.GetUserId(User);
-        //    ModelState.Remove("ApplicationUserId");
-
-        //    if (ModelState.IsValid)
-        //    {
-        //        comm.ApplicationUserId = _userManager.GetUserId(User);
-        //        _db.Comments.Add(comm);
-        //        _db.SaveChanges();
-        //        return Redirect("/Posts/Show/" + comm.PostId);
-        //    }
-        //    else
-        //    {
-        //        //foreach (var modelState in ModelState.Values)
-        //        //{
-        //        //    foreach (var error in modelState.Errors)
-        //        //    {
-        //        //        Console.WriteLine("Eroare: " + error.ErrorMessage);
-        //        //    }
-        //        //}
-        //        return Redirect("/Posts/Show/" + comm.PostId);
-        //    }
-        //}
+        //nou
 
 
         // In acest moment vom implementa editarea intr-o pagina View separata

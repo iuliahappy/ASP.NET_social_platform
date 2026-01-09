@@ -18,11 +18,30 @@
 {
     <form asp-controller="Comments" asp-action="New" method="post">
         <input type="hidden" name="PostId" value="@ViewBag.PostId" />
+
         <textarea name="CommentBody" class="form-control" rows="3"></textarea>
+
+        @* Afișare eroare pentru CommentBody *@
+        <span class="text-danger">
+            @ViewData.ModelState["CommentBody"]?.Errors.FirstOrDefault()?.ErrorMessage
+        </span>
+
+        @* Afișare erori generale *@
+        @if (!ViewData.ModelState.IsValid && ViewData.ModelState[""] != null)
+        {
+            <div class="alert alert-danger mt-2">
+                @foreach (var error in ViewData.ModelState[""]?.Errors ?? Enumerable.Empty<Microsoft.AspNetCore.Mvc.ModelBinding.ModelError>())
+                {
+                    <div>@error.ErrorMessage</div>
+                }
+            </div>
+        }
+
         <button type="submit" class="btn btn-primary mt-2">Add a comment</button>
     </form>
 }
 <br />
+
 
 @foreach (var comm in Model)  
 {

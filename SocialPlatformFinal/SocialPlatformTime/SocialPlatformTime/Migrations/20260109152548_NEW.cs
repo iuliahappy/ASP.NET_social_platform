@@ -6,7 +6,7 @@ using Microsoft.EntityFrameworkCore.Migrations;
 namespace SocialPlatformTime.Migrations
 {
     /// <inheritdoc />
-    public partial class TataNelson : Migration
+    public partial class NEW : Migration
     {
         /// <inheritdoc />
         protected override void Up(MigrationBuilder migrationBuilder)
@@ -214,7 +214,10 @@ namespace SocialPlatformTime.Migrations
                     Image = table.Column<string>(type: "nvarchar(max)", nullable: true),
                     Video = table.Column<string>(type: "nvarchar(max)", nullable: true),
                     Date = table.Column<DateTime>(type: "datetime2", nullable: false),
-                    ApplicationUserId = table.Column<string>(type: "nvarchar(450)", nullable: false)
+                    ApplicationUserId = table.Column<string>(type: "nvarchar(450)", nullable: false),
+                    SentimentLabel = table.Column<string>(type: "nvarchar(max)", nullable: true),
+                    SentimentConfidence = table.Column<double>(type: "float", nullable: true),
+                    SentimentAnalyzedAt = table.Column<DateTime>(type: "datetime2", nullable: true)
                 },
                 constraints: table =>
                 {
@@ -282,7 +285,10 @@ namespace SocialPlatformTime.Migrations
                     Date = table.Column<DateTime>(type: "datetime2", nullable: false),
                     EditedDate = table.Column<DateTime>(type: "datetime2", nullable: true),
                     PostId = table.Column<int>(type: "int", nullable: false),
-                    ApplicationUserId = table.Column<string>(type: "nvarchar(450)", nullable: false)
+                    ApplicationUserId = table.Column<string>(type: "nvarchar(450)", nullable: false),
+                    SentimentLabel = table.Column<string>(type: "nvarchar(max)", nullable: true),
+                    SentimentConfidence = table.Column<double>(type: "float", nullable: true),
+                    SentimentAnalyzedAt = table.Column<DateTime>(type: "datetime2", nullable: true)
                 },
                 constraints: table =>
                 {

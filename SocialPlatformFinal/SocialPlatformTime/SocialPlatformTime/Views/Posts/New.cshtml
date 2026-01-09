@@ -1,5 +1,4 @@
 ﻿@model SocialPlatformTime.Models.Post
-
 @{
     ViewData["Title"] = "Create New Post";
 }
@@ -23,7 +22,7 @@
                 </div>
                 <div class="card-body">
                     <form method="post" asp-action="New" asp-controller="Posts" enctype="multipart/form-data">
-                        @if (!ViewData.ModelState.IsValid)
+                        @* @if (!ViewData.ModelState.IsValid)
                         {
                             <div class="alert alert-danger">
                                 @foreach (var error in ViewData.ModelState.Values.SelectMany(v => v.Errors))
@@ -31,8 +30,18 @@
                                     <div>@error.ErrorMessage</div>
                                 }
                             </div>
+                        } *@
+                        @* nou *@
+                        @if (!ViewData.ModelState.IsValid)
+                        {
+                            <div class="alert alert-danger">
+                                @foreach (var error in ViewData.ModelState.Values.SelectMany(v => v.Errors))
+                                {
+                                    <p>@error.ErrorMessage</p>
+                                }
+                            </div>
                         }
-
+                        @* nou *@
                         <!-- Post Description -->
                         <div class="mb-3">
                             <label asp-for="PostDescription" class="form-label fw-bold">

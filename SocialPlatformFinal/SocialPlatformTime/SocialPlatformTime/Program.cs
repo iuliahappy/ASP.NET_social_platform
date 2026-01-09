@@ -20,7 +20,9 @@ builder.Services.AddControllersWithViews();
 
 
 builder.Services.AddScoped<ISentimentAnalysisService, GoogleSentimentAnalysisService>();
-
+//nou
+builder.Services.AddScoped<IContentModerationService, GoogleContentModerationService>();
+//nou
 
 var app = builder.Build();
 
@@ -63,6 +65,3 @@ app.MapRazorPages()
    .WithStaticAssets();
 
 app.Run();
-
-
-
