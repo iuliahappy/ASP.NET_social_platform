@@ -131,8 +131,37 @@ namespace SocialPlatformTime.Controllers
             return RedirectToAction("Index");
         }
 
+        [Authorize(Roles = "Registered_User,Administrator")]
+        public IActionResult PendingList()
+        {
+            var currentUserId = _userManager.GetUserId(User);
+
+            var myOwnedGroupIds = _db.GroupRoles
+                .Where(gr => gr.ApplicationUserId == currentUserId && gr.RoleName == "Owner")
+                .Select(gr => gr.GroupId)
+                .ToList();
+
+            var pendingRequests = _db.GroupRoles
+                .Include(gr => gr.Group)
+                .Include(gr => gr.ApplicationUser)
+                .Where(gr => myOwnedGroupIds.Contains(gr.GroupId) && gr.RoleName == "Pending")
+                .ToList()
+                .GroupBy(gr => gr.Group.Name);
+
+            return View(pendingRequests);
+        }
+
+        //[Authorize(Roles = "Registered_User,Administrator")]
+        //[HttpPost]
+        //public IActionResult PendingResponse(bool response)
+        //{
+            
+        //    return View();
+        //}
+
         [HttpPost]
         [ValidateAntiForgeryToken]
+        [Authorize(Roles = "Registered_User,Administrator")]
         public IActionResult New(string groupName)
         {
             if (string.IsNullOrWhiteSpace(groupName))
