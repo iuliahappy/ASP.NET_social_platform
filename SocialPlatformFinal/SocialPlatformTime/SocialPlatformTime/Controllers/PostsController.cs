@@ -9,12 +9,14 @@ using SocialPlatformTime.Services;
 
 namespace Social_Platform.Controllers
 {
-    public class PostsController(ApplicationDbContext context, UserManager<ApplicationUser> userManager, RoleManager<IdentityRole> roleManager, ISentimentAnalysisService sentimentService) : Controller
+    public class PostsController(ApplicationDbContext context, UserManager<ApplicationUser> userManager, RoleManager<IdentityRole> roleManager, ISentimentAnalysisService sentimentService, IContentModerationService contentModerationService, ILogger<PostsController> logger) : Controller
     {
         private readonly ApplicationDbContext _db = context;
         private readonly UserManager<ApplicationUser> _userManager = userManager;
         private readonly RoleManager<IdentityRole> _roleManager = roleManager;
         private readonly ISentimentAnalysisService _sentimentService = sentimentService;
+        private readonly IContentModerationService _contentModerationService = contentModerationService;
+        private readonly ILogger<PostsController> _logger = logger;
 
 
         // Se afiseaza lista tuturor postarilor 
@@ -115,19 +117,14 @@ namespace Social_Platform.Controllers
             return View(post);
         }
 
-
+        //nou
         [HttpPost]
         [Authorize(Roles = "Registered_User,Administrator")]
         public async Task<IActionResult> NewAsync(Post post)
         {
             post.Date = DateTime.Now;
-
             post.ApplicationUserId = _userManager.GetUserId(User);
-
-            // ELIMINĂM eroarea pentru ApplicationUserId din ModelState
-            // pentru că o setăm manual și nu vine din formular
             ModelState.Remove("ApplicationUserId");
-
 
             // Validare custom: cel putin un camp trebuie completat
             if (string.IsNullOrWhiteSpace(post.PostDescription) &&
@@ -139,23 +136,41 @@ namespace Social_Platform.Controllers
                 return View(post);
             }
 
-            //Console.WriteLine(post.ApplicationUserId);
-
-          
-
-            if (ModelState.IsValid)                                                            
+            if (ModelState.IsValid)
             {
+                // Verificăm conținutul text pentru limbaj nepotrivit
+                string textToCheck = string.Empty;
+                if (!string.IsNullOrWhiteSpace(post.PostDescription))
+                    textToCheck += post.PostDescription + " ";
+                if (!string.IsNullOrWhiteSpace(post.TextContent))
+                    textToCheck += post.TextContent;
+
+                if (!string.IsNullOrWhiteSpace(textToCheck))
+                {
+                    var moderationResult = await _contentModerationService.ModerateContentAsync(textToCheck.Trim());
+
+                    if (!moderationResult.Success)
+                    {
+                        // Dacă serviciul de moderare nu funcționează, logăm eroarea dar permitem postarea
+                        _logger.LogWarning("Eroare la moderarea conținutului: {Error}", moderationResult.ErrorMessage);
+                    }
+                    else if (!moderationResult.IsAppropriate)
+                    {
+                        // Conținutul este neadecvat - blocăm publicarea
+                        ModelState.AddModelError("", "Conținutul tău conține termeni nepotriviți. Te rugăm să reformulezi.");
+                        return View(post);
+                    }
+                }
+
                 // imagine
                 if (post.ImageFile != null && post.ImageFile.Length > 0)
                 {
-                    // creez folderul wwwroot/images dacă nu există
                     var uploadsFolder = Path.Combine(Directory.GetCurrentDirectory(), "wwwroot", "images");
                     if (!Directory.Exists(uploadsFolder))
                     {
                         Directory.CreateDirectory(uploadsFolder);
                     }
 
-                    // nume unic de fișier
                     var fileName = Guid.NewGuid().ToString() + Path.GetExtension(post.ImageFile.FileName);
                     var filePath = Path.Combine(uploadsFolder, fileName);
 
@@ -164,10 +179,8 @@ namespace Social_Platform.Controllers
                         await post.ImageFile.CopyToAsync(stream);
                     }
 
-                    // salvăm în DB doar calea relativă, pentru <img src="">
                     post.Image = "/images/" + fileName;
                 }
-
 
                 // video
                 if (post.VideoFile != null && post.VideoFile.Length > 0)
@@ -190,16 +203,14 @@ namespace Social_Platform.Controllers
                 _db.SaveChanges();
                 TempData["message"] = "The post has been added!";
                 TempData["messageType"] = "alert-success";
-                //Console.WriteLine(post.ApplicationUserId);
                 return RedirectToAction("Index");
             }
-
             else
             {
                 return View(post);
             }
         }
-
+        //nou
 
         // Se editeaza un articol existent in baza de date
         // Se afiseaza formularul impreuna cu datele aferente articolului din baza de date
@@ -264,7 +275,7 @@ namespace Social_Platform.Controllers
                         _db.SaveChanges(); //aici se excuta query-ul
                         return RedirectToAction("Index");
                     }
-                    else 
+                    else
                     {
 
                         TempData["message"] = "You can't edit a post that it's not yours!";
@@ -318,26 +329,57 @@ namespace Social_Platform.Controllers
 
         // Add a comm for an asociated post
         // add a comment = write operation => we use HttpPost
+        //nou
         [HttpPost]
-        [Authorize(Roles ="Registered_User, Administrator")]
+        [Authorize(Roles = "Registered_User")]
         public async Task<IActionResult> Show([FromForm] Comment comm)
         {
             comm.Date = DateTime.Now;
-
-
-            // preluam id-ul userului care posteaza comentariul
             comm.ApplicationUserId = _userManager.GetUserId(User);
+            ModelState.Remove(nameof(Comment.ApplicationUserId));
 
             if (ModelState.IsValid)
             {
-                // Analizam sentimentul comentariului folosind GoogleAI API
+                // Verificăm conținutul comentariului pentru limbaj nepotrivit
+                if (!string.IsNullOrWhiteSpace(comm.CommentBody))
+                {
+                    var moderationResult = await _contentModerationService.ModerateContentAsync(comm.CommentBody);
+
+                    if (!moderationResult.Success)
+                    {
+                        _logger.LogWarning("Eroare la moderarea comentariului: {Error}", moderationResult.ErrorMessage);
+                    }
+                    else if (!moderationResult.IsAppropriate)
+                    {
+                        // Comentariul este neadecvat - blocăm publicarea
+                        ModelState.AddModelError("CommentBody", "Conținutul tău conține termeni nepotriviți. Te rugăm să reformulezi.");
+
+                        // Reîncărcăm postarea pentru a afișa eroarea
+                        Post? post = _db.Posts
+                            .Include(p => p.Comments)
+                                .ThenInclude(c => c.ApplicationUser)
+                            .Include(p => p.Reactions)
+                            .Include(p => p.ApplicationUser)
+                            .Where(p => p.Id == comm.PostId)
+                            .FirstOrDefault();
+
+                        if (post is null)
+                        {
+                            return NotFound();
+                        }
+
+                        SetAccessRights();
+                        return View(post);
+                    }
+                }
+
+                // Dacă conținutul este adecvat, continuăm cu analiza de sentiment
                 var sentimentResult = await _sentimentService.AnalyzeSentimentAsync(comm.CommentBody);
 
                 if (sentimentResult.Success)
                 {
                     comm.SentimentLabel = sentimentResult.Label;
-                    comm.SentimentConfidence =
-                    sentimentResult.Confidence;
+                    comm.SentimentConfidence = sentimentResult.Confidence;
                     comm.SentimentAnalyzedAt = DateTime.Now;
                 }
 
@@ -348,24 +390,23 @@ namespace Social_Platform.Controllers
             else
             {
                 Post? post = _db.Posts
-                                .Include(p => p.Comments)
-                                    .ThenInclude(c => c.ApplicationUser) // Userul care a creat comentariul
-                                .Include(p => p.Reactions)
-                                .Include(p => p.ApplicationUser) // Userul care a creat postarea
-                                .Where(p => p.Id == comm.PostId)
-                                .FirstOrDefault();
+                    .Include(p => p.Comments)
+                        .ThenInclude(c => c.ApplicationUser)
+                    .Include(p => p.Reactions)
+                    .Include(p => p.ApplicationUser)
+                    .Where(p => p.Id == comm.PostId)
+                    .FirstOrDefault();
                 if (post is null)
                 {
                     return NotFound();
                 }
 
-                //Redirect("/Posts/Show/" + comm.PostId); // imi pierd starea modelului daca fac redirect
-
                 SetAccessRights();
-
                 return View(post);
             }
         }
+
+        //nou
 
         private void SetAccessRights()
         {
@@ -381,7 +422,7 @@ namespace Social_Platform.Controllers
 
         [Authorize]
         public IActionResult Feed()
-        { 
+        {
             var currUserId = _userManager.GetUserId(User);
 
             // Retrieve Followed User Ids
@@ -389,7 +430,7 @@ namespace Social_Platform.Controllers
                 .Where(fr => fr.FollowerId == currUserId && fr.Status == "accepted")
                 .Select(fr => fr.FollowingId)
                 .ToList();
-            
+
             // Retrieve Posts (and associated reactions / comments) from followed Users (and current user) sorted by descending date
             var posts = _db.Posts
                 .Where(p => followedIds.Contains(p.ApplicationUserId) || p.ApplicationUserId == currUserId)
