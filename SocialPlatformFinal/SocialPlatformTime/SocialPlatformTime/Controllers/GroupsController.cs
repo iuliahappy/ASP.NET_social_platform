@@ -279,5 +279,63 @@ namespace SocialPlatformTime.Controllers
             // Acum group.Conversation nu mai este null
             return RedirectToAction("Show", "Conversations", new { id = group.Conversation.Id });
         }
+
+        [Authorize(Roles = "Registered_User,Administrator")] // Permitem accesul inițial ambelor categorii
+        [HttpPost]
+        public IActionResult Delete(int id)
+        {
+            var currentUserId = _userManager.GetUserId(User);
+
+            // 1. Găsim grupul și includem conversația
+            var group = _db.Groups
+                           .Include(g => g.Conversation)
+                           .FirstOrDefault(g => g.Id == id);
+
+            if (group == null)
+            {
+                return NotFound();
+            }
+
+            // 2. Verificăm dacă utilizatorul are dreptul de a șterge
+            bool isAdmin = User.IsInRole("Administrator");
+            bool isOwner = _db.GroupRoles.Any(gr =>
+                gr.GroupId == id &&
+                gr.ApplicationUserId == currentUserId &&
+                gr.RoleName == "Owner");
+
+            if (!isAdmin && !isOwner)
+            {
+                return Forbid(); // Returnăm 403 dacă nu este nici admin, nici owner
+            }
+
+            // 3. Ștergem rolurile din grup (GroupRoles)
+            var roles = _db.GroupRoles.Where(rt => rt.GroupId == id);
+            _db.GroupRoles.RemoveRange(roles);
+
+            // 4. Curățăm datele asociate conversației
+            if (group.Conversation != null)
+            {
+                int convId = group.Conversation.Id;
+
+                // Ștergem mesajele
+                var messages = _db.Messages.Where(m => m.ConversationId == convId);
+                _db.Messages.RemoveRange(messages);
+
+                // Ștergem asocierile utilizatorilor
+                var userConvs = _db.UserConversations.Where(uc => uc.ConversationId == convId);
+                _db.UserConversations.RemoveRange(userConvs);
+
+                // Ștergem conversația
+                _db.Conversations.Remove(group.Conversation);
+            }
+
+            // 5. Ștergem grupul și salvăm
+            _db.Groups.Remove(group);
+            _db.SaveChanges();
+
+            TempData["message"] = "The group and all associated data have been deleted.";
+
+            return RedirectToAction("Index", "Conversations");
+        }
     }
 }
