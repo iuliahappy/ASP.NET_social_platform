@@ -2,7 +2,9 @@
   "dependencies": {
     "mssql1": {
       "type": "mssql",
-      "connectionId": "ConnectionStrings:SocialPlatformTimeDBFinalYey"
+
+      "connectionId": "ConnectionStrings:Cm"
+
     }
   }
 }

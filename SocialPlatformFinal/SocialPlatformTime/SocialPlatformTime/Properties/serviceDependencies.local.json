@@ -4,7 +4,11 @@
       "secretStore": "LocalSecretsFile",
       "resourceId": null,
       "type": "mssql.local",
+<<<<<<< HEAD
       "connectionId": "ConnectionStrings:SocialPlatformTimeDBFinalYey"
+=======
+      "connectionId": "ConnectionStrings:Cm"
+>>>>>>> 89e013c695fd7be3bba5841eadf4a7114b677d33
     }
   }
 }
