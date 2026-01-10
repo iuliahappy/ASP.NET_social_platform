@@ -170,9 +170,9 @@
                             <textarea class="form-control" name="CommentBody"></textarea>
                              @* <span asp-validation-for="CommentBody" class="text-danger"></span> *@
 
-                            <span class="text-danger">
+                            @* <span class="text-danger">
                                 @ViewData.ModelState["CommentBody"]?.Errors.FirstOrDefault()?.ErrorMessage
-                            </span>
+                            </span> *@
 
                             @Html.ValidationMessage("CommentBody", new { @class = "text-danger" })
 
