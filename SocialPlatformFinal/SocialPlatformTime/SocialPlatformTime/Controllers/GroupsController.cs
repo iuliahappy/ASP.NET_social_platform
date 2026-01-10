@@ -62,16 +62,47 @@ namespace SocialPlatformTime.Controllers
         //    return RedirectToAction("Show", "Conversations", new { id = groupConversation.Id });
         //}
 
+        //[Authorize(Roles = "Registered_User,Administrator")]
+        //public IActionResult Index()
+        //{
+        //    var currentUserId = _userManager.GetUserId(User);
+
+        //    var groupsNotJoined = _db.Groups
+        //        .Where(g => !g.RoleTables.Any(r => r.ApplicationUserId == currentUserId))
+        //        .ToList();
+
+        //    return View(groupsNotJoined);
+        //}
+
         [Authorize(Roles = "Registered_User,Administrator")]
-        public IActionResult Index()
+        public IActionResult Index(string search, int page = 1)
         {
             var currentUserId = _userManager.GetUserId(User);
+            int pageSize = 5;
 
-            var groupsNotJoined = _db.Groups
-                .Where(g => !g.RoleTables.Any(r => r.ApplicationUserId == currentUserId))
+            var groupsQuery = _db.Groups
+                .Include(g => g.RoleTables)
+                    .ThenInclude(rt => rt.ApplicationUser)
+                .Where(g => !g.RoleTables.Any(r => r.ApplicationUserId == currentUserId));
+
+            if (!string.IsNullOrEmpty(search))
+            {
+                groupsQuery = groupsQuery.Where(g => g.Name.Contains(search)
+                                                || (g.Description != null && g.Description.Contains(search)));
+            }
+
+            int totalItems = groupsQuery.Count();
+            var groupsPaginated = groupsQuery
+                .OrderBy(g => g.Name)
+                .Skip((page - 1) * pageSize)
+                .Take(pageSize)
                 .ToList();
 
-            return View(groupsNotJoined);
+            ViewBag.Search = search;
+            ViewBag.CurrentPage = page;
+            ViewBag.TotalPages = (int)Math.Ceiling((double)totalItems / pageSize);
+
+            return View(groupsPaginated);
         }
 
         [Authorize(Roles = "Registered_User,Administrator")]
@@ -329,11 +360,10 @@ namespace SocialPlatformTime.Controllers
 
         [Authorize(Roles = "Registered_User,Administrator")]
         [HttpPost]
-        public IActionResult Leave(int id) // id este GroupId
+        public IActionResult Leave(int id)
         {
             var currentUserId = _userManager.GetUserId(User);
 
-            // 1. Găsim grupul pentru a identifica conversația asociată
             var group = _db.Groups
                            .Include(g => g.Conversation)
                            .FirstOrDefault(g => g.Id == id);
@@ -356,7 +386,6 @@ namespace SocialPlatformTime.Controllers
                 return DeleteInternal(group.Id);
             }
 
-            // 2. Ștergem rolul utilizatorului din acest grup
             var userRole = _db.GroupRoles
                               .FirstOrDefault(gr => gr.GroupId == id && gr.ApplicationUserId == currentUserId);
 
@@ -365,7 +394,6 @@ namespace SocialPlatformTime.Controllers
                 _db.GroupRoles.Remove(userRole);
             }
 
-            // 3. Ștergem accesul utilizatorului la conversația grupului
             if (group.Conversation != null)
             {
                 var userConv = _db.UserConversations
@@ -430,6 +458,58 @@ namespace SocialPlatformTime.Controllers
             TempData["message"] = "The group and all associated data have been deleted.";
 
             return RedirectToAction("Index", "Conversations");
+        }
+
+        [HttpPost]
+        [Authorize(Roles = "Registered_User,Administrator")]
+        public IActionResult Kick(int groupId, string userId)
+        {
+            var currentUserId = _userManager.GetUserId(User);
+
+            var group = _db.Groups
+                           .Include(g => g.Conversation)
+                           .FirstOrDefault(g => g.Id == groupId);
+
+            if (group == null) return NotFound();
+
+            bool isAdmin = User.IsInRole("Administrator");
+            bool isOwner = _db.GroupRoles.Any(gr =>
+                gr.GroupId == groupId &&
+                gr.ApplicationUserId == currentUserId &&
+                gr.RoleName == "Owner");
+
+            if (!isAdmin && !isOwner)
+            {
+                return Forbid();
+            }
+
+            if (userId == currentUserId)
+            {
+                return BadRequest("You cannot kick yourself. Use the Leave option instead.");
+            }
+
+            var userRole = _db.GroupRoles
+                              .FirstOrDefault(gr => gr.GroupId == groupId && gr.ApplicationUserId == userId);
+            if (userRole != null)
+            {
+                _db.GroupRoles.Remove(userRole);
+            }
+
+            if (group.Conversation != null)
+            {
+                var userConv = _db.UserConversations
+                                  .FirstOrDefault(uc => uc.ConversationId == group.Conversation.Id && uc.ApplicationUserId == userId);
+                if (userConv != null)
+                {
+                    _db.UserConversations.Remove(userConv);
+                }
+            }
+
+            _db.SaveChanges();
+
+            TempData["message"] = "The user has been removed from the group.";
+
+            return RedirectToAction("Show", "Conversations", new { id = group.Conversation.Id });
         }
     }
 }
