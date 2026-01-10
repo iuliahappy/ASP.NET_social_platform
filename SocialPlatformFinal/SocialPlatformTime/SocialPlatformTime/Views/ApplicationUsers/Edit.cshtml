@@ -35,6 +35,10 @@
         <option value="true">Public</option>
         <option value="false">Private</option>
     </select>
+    <form asp-action="ResetPassword" asp-route-id="@Model.Id" method="post">
+        <button class="btn btn-danger mt-2">Reset Password</button>
+    </form>
+
     @if (canChangeRole)
     { 
         <label>Role</label>

@@ -59,7 +59,7 @@ namespace Social_Platform.Controllers
                     else if (!moderationResult.IsAppropriate)
                     {
                         // Comentariul este neadecvat - blocăm publicarea
-                        TempData["message"] = "Conținutul tău conține termeni nepotriviți. Te rugăm să reformulezi.";
+                        TempData["message"] = "Your content contains inappropriate terms. Please revise!";
                         TempData["messageType"] = "alert-danger";
                         return Redirect("/Posts/Show/" + comm.PostId);
                     }
