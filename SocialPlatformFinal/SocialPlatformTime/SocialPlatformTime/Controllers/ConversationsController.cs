@@ -45,6 +45,20 @@ namespace SocialPlatformTime.Controllers
                 _db.SaveChanges();
             }
 
+            var group = _db.Groups
+               .Include(g => g.Conversation)
+               .FirstOrDefault(g => g.Conversation != null && g.Conversation.Id == id);
+            if (group != null)
+            {
+                ViewBag.GroupId = group.Id;
+                ViewBag.GroupDescription = group.Description;
+
+                ViewBag.IsOwner = _db.GroupRoles.Any(gr =>
+                    gr.GroupId == group.Id &&
+                    gr.ApplicationUserId == currentUserId &&
+                    gr.RoleName == "Owner");
+            }
+
             // Extract the messages of the conversation
             var messages = _db.Messages
                                 .Include(m => m.ApplicationUser)

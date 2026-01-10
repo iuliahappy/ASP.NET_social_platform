@@ -6,7 +6,7 @@ using Microsoft.EntityFrameworkCore.Migrations;
 namespace SocialPlatformTime.Migrations
 {
     /// <inheritdoc />
-    public partial class NEW : Migration
+    public partial class migre : Migration
     {
         /// <inheritdoc />
         protected override void Up(MigrationBuilder migrationBuilder)

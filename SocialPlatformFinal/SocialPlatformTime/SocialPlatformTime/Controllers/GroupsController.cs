@@ -131,8 +131,81 @@ namespace SocialPlatformTime.Controllers
             return RedirectToAction("Index");
         }
 
+        [Authorize(Roles = "Registered_User,Administrator")]
+        public IActionResult PendingList()
+        {
+            var currentUserId = _userManager.GetUserId(User);
+
+            var myOwnedGroupIds = _db.GroupRoles
+                .Where(gr => gr.ApplicationUserId == currentUserId && gr.RoleName == "Owner")
+                .Select(gr => gr.GroupId)
+                .ToList();
+
+            var pendingRequests = _db.GroupRoles
+                .Include(gr => gr.Group)
+                .Include(gr => gr.ApplicationUser)
+                .Where(gr => myOwnedGroupIds.Contains(gr.GroupId) && gr.RoleName == "Pending")
+                .ToList()
+                .GroupBy(gr => gr.Group.Name);
+
+            return View(pendingRequests);
+        }
+
+        [Authorize(Roles = "Registered_User,Administrator")]
+        [HttpPost]
+        public IActionResult PendingResponse(int requestId, bool response)
+        {
+            var currentUserId = _userManager.GetUserId(User);
+
+            var request = _db.GroupRoles
+                .Include(gr => gr.Group)
+                .ThenInclude(g => g.Conversation)
+                .FirstOrDefault(gr => gr.Id == requestId);
+
+            if (request == null)
+            {
+                return NotFound("The request wasn't found!");
+            }
+
+            var isOwner = _db.GroupRoles.Any(gr =>
+                gr.GroupId == request.GroupId &&
+                gr.ApplicationUserId == currentUserId &&
+                gr.RoleName == "Owner");
+
+            if (!isOwner)
+            {
+                return Forbid();
+            }
+
+            if (response)
+            {
+                request.RoleName = "Member";
+
+                if (request.Group?.Conversation != null)
+                {
+                    var userConv = new UserConversation
+                    {
+                        ApplicationUserId = request.ApplicationUserId,
+                        ConversationId = request.Group.Conversation.Id,
+                        LastEntry = DateTime.Now
+                    };
+                    _db.UserConversations.Add(userConv);
+                }
+                TempData["messageSend"] = $"The user was accepted in {request.Group.Name}.";
+            }
+            else
+            {
+                _db.GroupRoles.Remove(request);
+                TempData["messageSend"] = "The request has been declined.";
+            }
+
+            _db.SaveChanges();
+            return RedirectToAction("PendingList");
+        }
+
         [HttpPost]
         [ValidateAntiForgeryToken]
+        [Authorize(Roles = "Registered_User,Administrator")]
         public IActionResult New(string groupName)
         {
             if (string.IsNullOrWhiteSpace(groupName))
@@ -176,46 +249,239 @@ namespace SocialPlatformTime.Controllers
             return RedirectToAction("Show", "Conversations", new { id = groupConversation.Id });
         }
 
+        [Authorize(Roles = "Registered_User,Administrator")]
         [HttpPost]
-        public IActionResult AddUserToGroup(int groupId, string newUserId)
+        public IActionResult ModifyDescription(int groupId, string newDescription)
         {
             var currentUserId = _userManager.GetUserId(User);
 
-            var currentUserRole = _db.GroupRoles
-                                    .FirstOrDefault(gr => gr.GroupId == groupId && gr.ApplicationUserId == currentUserId);
+            var group = _db.Groups
+                           .Include(g => g.Conversation)
+                           .FirstOrDefault(g => g.Id == groupId);
 
-            if (currentUserRole == null || currentUserRole.RoleName != "Owner")
+            var isOwner = _db.GroupRoles.Any(gr =>
+                gr.GroupId == groupId &&
+                gr.ApplicationUserId == currentUserId &&
+                gr.RoleName == "Owner");
+
+            if (group == null || (!isOwner && !User.IsInRole("Administrator")))
             {
                 return Forbid();
             }
 
-            var isAlreadyMember = _db.UserConversations
-                                    .Any(uc => uc.ApplicationUserId == newUserId && uc.Conversation.GroupId == groupId);
+            group.Description = newDescription;
+            _db.SaveChanges();
 
-            if (isAlreadyMember) return BadRequest("User is already in the group.");
+            TempData["messageSend"] = "The group description has been successfully modified!";
 
-            var conversation = _db.Conversations
-                                    .FirstOrDefault(c => c.GroupId == groupId);
+            return RedirectToAction("Show", "Conversations", new { id = group.Conversation.Id });
+        }
 
-            if (conversation == null) return NotFound();
+        [Authorize(Roles = "Registered_User,Administrator")]
+        [HttpPost]
+        public IActionResult Delete(int id)
+        {
+            var currentUserId = _userManager.GetUserId(User);
 
-            _db.UserConversations.Add(new UserConversation
+            var group = _db.Groups
+                           .Include(g => g.Conversation)
+                           .FirstOrDefault(g => g.Id == id);
+
+            if (group == null)
             {
-                ApplicationUserId = newUserId,
-                ConversationId = conversation.Id,
-                LastEntry = DateTime.Now
-            });
+                return NotFound();
+            }
 
-            _db.GroupRoles.Add(new RoleTable
+            bool isAdmin = User.IsInRole("Administrator");
+            bool isOwner = _db.GroupRoles.Any(gr =>
+                gr.GroupId == id &&
+                gr.ApplicationUserId == currentUserId &&
+                gr.RoleName == "Owner");
+
+            if (!isAdmin && !isOwner)
             {
-                ApplicationUserId = newUserId,
-                GroupId = groupId,
-                RoleName = "Member"
-            });
+                return Forbid();
+            }
+
+            var roles = _db.GroupRoles.Where(rt => rt.GroupId == id);
+            _db.GroupRoles.RemoveRange(roles);
+
+            if (group.Conversation != null)
+            {
+                int convId = group.Conversation.Id;
+
+                var messages = _db.Messages.Where(m => m.ConversationId == convId);
+                _db.Messages.RemoveRange(messages);
+
+                var userConvs = _db.UserConversations.Where(uc => uc.ConversationId == convId);
+                _db.UserConversations.RemoveRange(userConvs);
+
+                _db.Conversations.Remove(group.Conversation);
+            }
+
+            _db.Groups.Remove(group);
+            _db.SaveChanges();
+
+            TempData["message"] = "The group and all associated data have been deleted.";
+
+            return RedirectToAction("Index", "Conversations");
+        }
+
+        [Authorize(Roles = "Registered_User,Administrator")]
+        [HttpPost]
+        public IActionResult Leave(int id) // id este GroupId
+        {
+            var currentUserId = _userManager.GetUserId(User);
+
+            // 1. Găsim grupul pentru a identifica conversația asociată
+            var group = _db.Groups
+                           .Include(g => g.Conversation)
+                           .FirstOrDefault(g => g.Id == id);
+
+            if (group == null)
+            {
+                return NotFound();
+            }
+
+            var nrOwners = _db.GroupRoles
+                                .Where(gr => gr.RoleName == "Owner" && gr.GroupId == id)
+                                .Count();
+            var isOwner = _db.GroupRoles
+                                .Any(gr => gr.RoleName == "Owner" 
+                                && gr.GroupId == id 
+                                && gr.ApplicationUserId == currentUserId);
+
+            if (nrOwners == 1 && isOwner)
+            {
+                return DeleteInternal(group.Id);
+            }
+
+            // 2. Ștergem rolul utilizatorului din acest grup
+            var userRole = _db.GroupRoles
+                              .FirstOrDefault(gr => gr.GroupId == id && gr.ApplicationUserId == currentUserId);
+
+            if (userRole != null)
+            {
+                _db.GroupRoles.Remove(userRole);
+            }
+
+            // 3. Ștergem accesul utilizatorului la conversația grupului
+            if (group.Conversation != null)
+            {
+                var userConv = _db.UserConversations
+                                  .FirstOrDefault(uc => uc.ConversationId == group.Conversation.Id && uc.ApplicationUserId == currentUserId);
+
+                if (userConv != null)
+                {
+                    _db.UserConversations.Remove(userConv);
+                }
+            }
 
             _db.SaveChanges();
 
-            return RedirectToAction("Show", "Conversations", new { id = conversation.Id });
+            TempData["message"] = "You have successfully left the group: " + group.Name;
+
+            return RedirectToAction("Index", "Conversations");
+        }
+
+        private IActionResult DeleteInternal(int id)
+        {
+            var currentUserId = _userManager.GetUserId(User);
+
+            var group = _db.Groups
+                           .Include(g => g.Conversation)
+                           .FirstOrDefault(g => g.Id == id);
+
+            if (group == null)
+            {
+                return NotFound();
+            }
+
+            bool isAdmin = User.IsInRole("Administrator");
+            bool isOwner = _db.GroupRoles.Any(gr =>
+                gr.GroupId == id &&
+                gr.ApplicationUserId == currentUserId &&
+                gr.RoleName == "Owner");
+
+            if (!isAdmin && !isOwner)
+            {
+                return Forbid();
+            }
+
+            var roles = _db.GroupRoles.Where(rt => rt.GroupId == id);
+            _db.GroupRoles.RemoveRange(roles);
+
+            if (group.Conversation != null)
+            {
+                int convId = group.Conversation.Id;
+
+                var messages = _db.Messages.Where(m => m.ConversationId == convId);
+                _db.Messages.RemoveRange(messages);
+
+                var userConvs = _db.UserConversations.Where(uc => uc.ConversationId == convId);
+                _db.UserConversations.RemoveRange(userConvs);
+
+                _db.Conversations.Remove(group.Conversation);
+            }
+
+            _db.Groups.Remove(group);
+            _db.SaveChanges();
+
+            TempData["message"] = "The group and all associated data have been deleted.";
+
+            return RedirectToAction("Index", "Conversations");
+        }
+
+        [HttpPost]
+        [Authorize(Roles = "Registered_User,Administrator")]
+        public IActionResult Kick(int groupId, string userId)
+        {
+            var currentUserId = _userManager.GetUserId(User);
+
+            var group = _db.Groups
+                           .Include(g => g.Conversation)
+                           .FirstOrDefault(g => g.Id == groupId);
+
+            if (group == null) return NotFound();
+
+            bool isAdmin = User.IsInRole("Administrator");
+            bool isOwner = _db.GroupRoles.Any(gr =>
+                gr.GroupId == groupId &&
+                gr.ApplicationUserId == currentUserId &&
+                gr.RoleName == "Owner");
+
+            if (!isAdmin && !isOwner)
+            {
+                return Forbid();
+            }
+
+            if (userId == currentUserId)
+            {
+                return BadRequest("You cannot kick yourself. Use the Leave option instead.");
+            }
+
+            var userRole = _db.GroupRoles
+                              .FirstOrDefault(gr => gr.GroupId == groupId && gr.ApplicationUserId == userId);
+            if (userRole != null)
+            {
+                _db.GroupRoles.Remove(userRole);
+            }
+
+            if (group.Conversation != null)
+            {
+                var userConv = _db.UserConversations
+                                  .FirstOrDefault(uc => uc.ConversationId == group.Conversation.Id && uc.ApplicationUserId == userId);
+                if (userConv != null)
+                {
+                    _db.UserConversations.Remove(userConv);
+                }
+            }
+
+            _db.SaveChanges();
+
+            TempData["message"] = "The user has been removed from the group.";
+
+            return RedirectToAction("Show", "Conversations", new { id = group.Conversation.Id });
         }
     }
 }

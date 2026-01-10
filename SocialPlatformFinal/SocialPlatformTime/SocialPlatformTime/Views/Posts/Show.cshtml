@@ -157,7 +157,8 @@
 
                 <div class="card">
 
-                    <form method="post" asp-controller="Comments" asp-action="New">
+                    @* <form method="post" asp-controller="Comments" asp-action="New"> *@
+                    <form method="post" asp-controller="Posts" asp-action="Show">
 
                         <div class="card-body">
 
@@ -169,9 +170,11 @@
                             <textarea class="form-control" name="CommentBody"></textarea>
                              @* <span asp-validation-for="CommentBody" class="text-danger"></span> *@
 
-                            <span class="text-danger">
+                            @* <span class="text-danger">
                                 @ViewData.ModelState["CommentBody"]?.Errors.FirstOrDefault()?.ErrorMessage
-                            </span>
+                            </span> *@
+
+                            @Html.ValidationMessage("CommentBody", new { @class = "text-danger" })
 
                             <br /><br />
 

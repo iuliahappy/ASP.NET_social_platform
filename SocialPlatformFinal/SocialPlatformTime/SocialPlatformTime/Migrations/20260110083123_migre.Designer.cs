@@ -12,8 +12,8 @@ using SocialPlatformTime.Data;
 namespace SocialPlatformTime.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    [Migration("20260109125815_Salamaleku")]
-    partial class Salamaleku
+    [Migration("20260110083123_migre")]
+    partial class migre
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
