@@ -6,8 +6,7 @@
     },
     "mssql1": {
       "type": "mssql",
-      "connectionId": "ConnectionStrings:SocialPlatformTimeDBFinalYey",
-      "dynamicId": null
+      "connectionId": "ConnectionStrings:MohamedKBOOM"
     }
   }
 }
