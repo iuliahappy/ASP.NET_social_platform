@@ -134,7 +134,7 @@ namespace SocialPlatformTime.Models
                             NormalizedEmail = "MEMBER@TEST.COM",
                             Email = "member@test.com",
                             NormalizedUserName = "MEMBER@TEST.COM",
-                            PasswordHash = hasher.HashPassword(null, "User1!")
+                            PasswordHash = hasher.HashPassword(null, "Member1!")
                         }
                     );
 

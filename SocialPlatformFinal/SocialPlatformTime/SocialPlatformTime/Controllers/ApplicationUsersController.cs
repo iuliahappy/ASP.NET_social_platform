@@ -105,12 +105,12 @@ namespace SocialPlatformTime.Controllers
             if (canView)
             {
                 var followersList = _db.FollowRequests
-                    .Where(fr => fr.FollowingId == currUserId && fr.Status == "accepted")
+                    .Where(fr => fr.FollowingId == id && fr.Status == "accepted")
                     .Select(fr => fr.Follower)
                     .ToList();
 
                 var followingList = _db.FollowRequests
-                    .Where(fr => fr.FollowerId == currUserId && fr.Status == "accepted")
+                    .Where(fr => fr.FollowerId == id && fr.Status == "accepted")
                     .Select(fr => fr.Following)
                     .ToList();
 
