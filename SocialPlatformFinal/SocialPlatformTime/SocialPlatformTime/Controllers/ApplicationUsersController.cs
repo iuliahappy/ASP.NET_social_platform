@@ -174,6 +174,7 @@ namespace SocialPlatformTime.Controllers
         [Authorize(Roles = "Administrator")]
         // Create User (post request)
         [HttpPost]
+        [ValidateAntiForgeryToken]
         public async Task<IActionResult> Create(ApplicationUser newUser, string selectedRole)
         {
             var emailValidator = new System.ComponentModel.DataAnnotations.EmailAddressAttribute();
@@ -255,6 +256,7 @@ namespace SocialPlatformTime.Controllers
         }
 
         [HttpPost]
+        [ValidateAntiForgeryToken]
         public async Task<IActionResult> ResetPassword(string id)
         {
             var user = await _userManager.FindByIdAsync(id);
@@ -277,6 +279,7 @@ namespace SocialPlatformTime.Controllers
 
         [Authorize]
         [HttpPost]
+        [ValidateAntiForgeryToken]
         public async Task<IActionResult> ChangePasswordFirstLogin(string oldPassword, string newPassword)
         {
             var user = await _userManager.GetUserAsync(User);
@@ -304,6 +307,7 @@ namespace SocialPlatformTime.Controllers
         public IActionResult ChangePassword() => View();
 
         [HttpPost]
+        [ValidateAntiForgeryToken]
         public async Task<IActionResult> ChangePassword(string oldPassword, string newPassword)
         {
             var user = await _userManager.GetUserAsync(User);
@@ -361,6 +365,7 @@ namespace SocialPlatformTime.Controllers
 
         // Edit user (post request)
         [HttpPost]
+        [ValidateAntiForgeryToken]
         public async Task<IActionResult> Edit(string id, ApplicationUser updatedUser, string selectedRole)
         {
             //Console.WriteLine("MEOW");
@@ -466,6 +471,7 @@ namespace SocialPlatformTime.Controllers
         // Delete user (post request)
         [Authorize(Roles = "Administrator")]
         [HttpPost]
+        [ValidateAntiForgeryToken]
         public async Task<IActionResult> Delete(string id)
         {
             // Retrieve User
@@ -513,6 +519,7 @@ namespace SocialPlatformTime.Controllers
         }
 
         [HttpPost]
+        [ValidateAntiForgeryToken]
         public async Task<IActionResult> CompleteProfile(ApplicationUser model)
         {
             var user = await _userManager.GetUserAsync(User);
@@ -558,6 +565,7 @@ namespace SocialPlatformTime.Controllers
 
         [Authorize]
         [HttpPost]
+        [ValidateAntiForgeryToken]
         public async Task<IActionResult> ToggleFollow(string id)
         {
             var currUserId = _userManager.GetUserId(User);
@@ -653,6 +661,7 @@ namespace SocialPlatformTime.Controllers
 
         [Authorize]
         [HttpPost]
+        [ValidateAntiForgeryToken]
         public async Task<IActionResult> RespondFollow(int requestId, string decision)
         {
             var currUserId = _userManager.GetUserId(User);

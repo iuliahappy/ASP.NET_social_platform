@@ -1,4 +1,5 @@
-﻿using Microsoft.AspNetCore.Identity;
+﻿using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using NuGet.Protocol.Plugins;
@@ -7,15 +8,17 @@ using SocialPlatformTime.Models;
 
 namespace SocialPlatformTime.Controllers
 {
+    [Authorize] // Only logged-in users ought to be able to take part in Convo flow
     public class ConversationsController(ApplicationDbContext context, UserManager<ApplicationUser> userManager, RoleManager<IdentityRole> roleManager) : Controller
     {
         private readonly ApplicationDbContext _db = context;
         private readonly UserManager<ApplicationUser> _userManager = userManager;
         private readonly RoleManager<IdentityRole> _roleManager = roleManager;
-
+        
         public IActionResult Index()
         {
             var currentUserId = _userManager.GetUserId(User);
+            if (currentUserId == null) return Challenge();
 
             var conversations = _db.Conversations
                 .Include(c => c.Group)

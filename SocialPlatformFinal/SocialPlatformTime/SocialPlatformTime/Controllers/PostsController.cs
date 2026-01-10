@@ -449,35 +449,49 @@ namespace Social_Platform.Controllers
         public IActionResult Feed()
         {
             var currUserId = _userManager.GetUserId(User);
+            bool isAdmin = User.IsInRole("Administrator");
+            ViewBag.SavedPostIds = new List<int>();
 
-            // Retrieve Followed User Ids
-            var followedIds = _db.FollowRequests
-                .Where(fr => fr.FollowerId == currUserId && fr.Status == "accepted")
-                .Select(fr => fr.FollowingId)
-                .ToList();
-
-            // Retrieve Posts (and associated reactions / comments) from followed Users (and current user) sorted by descending date
-            var posts = _db.Posts
-                .Where(p => followedIds.Contains(p.ApplicationUserId) || p.ApplicationUserId == currUserId)
+            // Db query foundation to retrieve Posts (and associated reactions / comments) 
+            IQueryable<Post> postsQuery = _db.Posts
                 .Include(p => p.ApplicationUser)
                 .Include(p => p.Reactions)
                 .Include(p => p.Comments)
+                .AsQueryable();
+
+            // since admin users don't take part in the follow flow, we exclude them from the 'personalized' part of the feed
+            // they see all available posts
+            if (!isAdmin)
+            {
+                List<string> acceptedFollowIds = new List<string>();
+                if (currUserId != null)
+                {
+                    // Retrieve Followed User Ids
+                    acceptedFollowIds = _db.FollowRequests
+                        .Where(fr => fr.FollowerId == currUserId && fr.Status == "accepted")
+                        .Select(fr => fr.FollowingId)
+                        .ToList();
+                }
+                // Modify query st we get posts from followed Users (and current user)
+                postsQuery = postsQuery
+                    .Where(p => p.ApplicationUserId == currUserId
+                             || acceptedFollowIds.Contains(p.ApplicationUserId));
+
+                // Setează SavedPostIds pentru utilizatorul curent
+                if (User.Identity?.IsAuthenticated == true && currUserId != null)
+                {
+                    var savedPostIds = _db.SavedPosts
+                        .Where(sp => sp.ApplicationUserId == currUserId)
+                        .Select(sp => sp.PostId)
+                        .ToList();
+                    ViewBag.SavedPostIds = savedPostIds;
+                }
+            }
+
+            // Execute db query with the previous filters sorted by descending date
+            var posts = postsQuery
                 .OrderByDescending(p => p.Date)
                 .ToList();
-
-            // Setează SavedPostIds pentru utilizatorul curent
-            if (User.Identity?.IsAuthenticated == true && currUserId != null)
-            {
-                var savedPostIds = _db.SavedPosts
-                    .Where(sp => sp.ApplicationUserId == currUserId)
-                    .Select(sp => sp.PostId)
-                    .ToList();
-                ViewBag.SavedPostIds = savedPostIds;
-            }
-            else
-            {
-                ViewBag.SavedPostIds = new List<int>();
-            }
 
             return View(posts);
         }
