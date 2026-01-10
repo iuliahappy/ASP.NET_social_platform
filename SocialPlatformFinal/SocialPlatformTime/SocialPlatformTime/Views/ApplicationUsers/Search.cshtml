@@ -1,16 +1,59 @@
 ﻿@model List<ApplicationUser>
 
-<h2>Search results</h2>
-
-@foreach (var user in Model)
-{
-    <div class="card mb-2 p-2">
-        @* <img src="@user.Image" width="50" /> *@
-        <strong>@user.FirstName @user.LastName</strong>
-        <p>@user.ProfileDescription</p>
-
-        <a asp-action="Show" asp-route-id="@user.Id">
-            View profile
-        </a>
-    </div>
+@{
+    ViewData["Title"] = "User Search Results";
 }
+
+<div class="container py-4">
+    <h2 class="mb-4">Search Results</h2>
+
+    @if (!Model.Any())
+    {
+        <div class="alert alert-info">
+            <i class="bi bi-search"></i>
+            No users found matching your search.
+        </div>
+    }
+    else
+    {
+        <div class="row g-3">
+            @foreach (var user in Model)
+            {
+                <div class="col-md-6 col-lg-4">
+                    <div class="card shadow-sm h-100">
+                        <div class="row g-0">
+                            <div class="col-auto p-3">
+                                <img src="@(!string.IsNullOrEmpty(user.Image) ? user.Image : "~/images/default-avatar.png")"
+                                     class="rounded-circle"
+                                     style="width: 64px; height: 64px; object-fit: cover;"
+                                     alt="Profile pic">
+                            </div>
+                            <div class="col">
+                                <div class="card-body">
+                                    <h5 class="card-title">@user.FirstName @user.LastName</h5>
+                                    <p class="card-text text-secondary small">
+                                        @if (!string.IsNullOrEmpty(user.ProfileDescription))
+                                        {
+                                            @(user.ProfileDescription.Length > 75
+                                                                            ? user.ProfileDescription.Substring(0, 75) + "…"
+                                                                            : user.ProfileDescription)
+                                                                }
+                                    </p>
+                                    @* <span class="badge bg-secondary">
+                                        @(user.IsPublic ? "Public" : "Private")
+                                    </span> *@
+                                    <a asp-action="Show"
+                                       asp-route-id="@user.Id"
+                                       class="btn btn-primary btn-sm">
+                                        View Full Profile
+                                    </a>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            }
+        </div>
+    }
+</div>
+

@@ -28,6 +28,10 @@
         <label asp-for="ImageFile" class="form-label fw-bold">Upload image</label>
         <input asp-for="ImageFile" type="file" class="form-control" accept="image/*" />
         <small class="form-text text-muted text-image-video">Select a photo from your computer.</small>
+        <select asp-for="IsPublic" class="form-control">
+            <option value="true">Public</option>
+            <option value="false">Private</option>
+        </select>
     </div>
     <br />
 
