@@ -73,7 +73,7 @@ namespace SocialPlatformTime.Controllers
                     fr.Status == "accepted");
             }
 
-            bool canView = userWithPosts.IsPublic || (currUserId == id) || User.IsInRole("Administrator")|| isAcceptedFollower;
+            bool canView = userWithPosts.IsPublic || (currUserId == id) || User.IsInRole("Administrator") || isAcceptedFollower;
 
             ViewBag.CanViewFullProfile = canView;
 
@@ -102,7 +102,7 @@ namespace SocialPlatformTime.Controllers
             ViewBag.IsCurrentUser = currUserId == id;
             ViewBag.ShowFollowSystem = !isEitherUserAdmin;
 
-            if (currUserId == id) // doar pe propriul profil
+            if (canView)
             {
                 var followersList = _db.FollowRequests
                     .Where(fr => fr.FollowingId == currUserId && fr.Status == "accepted")
@@ -116,6 +116,17 @@ namespace SocialPlatformTime.Controllers
 
                 ViewBag.FollowersList = followersList;
                 ViewBag.FollowingList = followingList;
+            }
+            else
+            {
+                // Private profile and not following, not allowed → only counts
+                ViewBag.FollowersCount = _db.FollowRequests
+                    .Count(fr => fr.FollowingId == userWithPosts.Id && fr.Status == "accepted");
+                ViewBag.FollowingCount = _db.FollowRequests
+                    .Count(fr => fr.FollowerId == userWithPosts.Id && fr.Status == "accepted");
+
+                ViewBag.FollowersList = new List<ApplicationUser>();
+                ViewBag.FollowingList = new List<ApplicationUser>();
             }
 
             // Cereri de follow PENDING primite de utilizatorul curent

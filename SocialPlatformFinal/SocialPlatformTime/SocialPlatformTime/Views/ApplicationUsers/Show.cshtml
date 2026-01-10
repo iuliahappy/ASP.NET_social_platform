@@ -63,12 +63,13 @@
                     var followers = ViewBag.FollowersList as List<ApplicationUser> ?? new List<ApplicationUser>();
                     var following = ViewBag.FollowingList as List<ApplicationUser> ?? new List<ApplicationUser>();
 
+                    // if its private -> show count , if can view, and toggled, show detailed list
                     <div class="d-flex gap-2 mb-3">
                         <button class="btn btn-outline-primary" type="button" data-bs-toggle="collapse" data-bs-target="#followersCollapse">
-                            Followers (@followers.Count)
+                            Followers (@(followers.Any() ? followers.Count : ViewBag.FollowersCount ?? 0))
                         </button>
                         <button class="btn btn-outline-primary" type="button" data-bs-toggle="collapse" data-bs-target="#followingCollapse">
-                            Following (@following.Count)
+                            Following (@(following.Any() ? following.Count : ViewBag.FollowingCount ?? 0))
                         </button>
                     </div>
 
@@ -76,7 +77,7 @@
                         <div class="card card-body">
                             @if (!followers.Any())
                             {
-                                <span class="text-secondary">No followers</span>
+                                <span class="text-secondary">This user has no followers yet.</span>
                             }
                             else
                             {
@@ -99,7 +100,7 @@
                         <div class="card card-body">
                             @if (!following.Any())
                             {
-                                <span class="text-secondary">Not following anyone</span>
+                                <span class="text-secondary">This user does not follow anyone yet.</span>
                             }
                             else
                             {
