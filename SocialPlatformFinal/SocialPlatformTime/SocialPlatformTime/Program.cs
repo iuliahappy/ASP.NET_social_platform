@@ -52,6 +52,7 @@ app.UseStaticFiles();
 
 app.UseAuthentication();
 app.UseMiddleware<ProfileCompletionMiddleware>();
+app.UseMiddleware<ForcePasswordChangeMiddleware>();
 app.UseAuthorization();
 
 app.MapStaticAssets();

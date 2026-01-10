@@ -19,7 +19,7 @@ namespace SocialPlatformTime.Controllers
     {
         // For CRUD Operations on Users from Database Data
         private readonly ApplicationDbContext _db = context;
-        // For Identity FrameWork User Management (more ocmplex User Profile stuff, like Identity consistency, password hashing etc)
+        // For Identity FrameWork User Management (more complex User Profile stuff, like Identity consistency, password hashing etc)
         private readonly UserManager<ApplicationUser> _userManager = userManager;
         // For authentification, login/logout, credential validation etc
         private readonly SignInManager<ApplicationUser> _signInManager = signInManager;
@@ -46,6 +46,9 @@ namespace SocialPlatformTime.Controllers
         [AllowAnonymous]
         public async Task<IActionResult> Show(string id)
         {
+            if (string.IsNullOrEmpty(id))
+                return BadRequest();
+
             var currUserId = _userManager.GetUserId(User);
 
             var userWithPosts = await _userManager.Users
@@ -55,9 +58,9 @@ namespace SocialPlatformTime.Controllers
 
             if (userWithPosts == null)
                 return NotFound();
-            // Non-Admin user tries to view Admin User P
+            // Non-Admin user tries to view Admin User Profile
             else if (!User.IsInRole("Administrator") && await _userManager.IsInRoleAsync(userWithPosts, "Administrator"))
-                return Unauthorized();
+                return Forbid();
 
            
             // Can View <=> Profile is Public, is Owner of Profile, current User is an Admin SAU are follow acceptat
@@ -126,7 +129,6 @@ namespace SocialPlatformTime.Controllers
                 ViewBag.PendingRequests = pendingRequests;
             }
 
-
             // Setează SavedPostIds pentru utilizatorul curent
             if (User.Identity?.IsAuthenticated == true && currUserId != null)
             {
@@ -158,13 +160,29 @@ namespace SocialPlatformTime.Controllers
             return View();
         }
 
+        [ValidateAntiForgeryToken]
         [Authorize(Roles = "Administrator")]
         // Create User (post request)
         [HttpPost]
         public async Task<IActionResult> Create(ApplicationUser newUser, string selectedRole)
         {
-            if (!ModelState.IsValid)
+            var emailValidator = new System.ComponentModel.DataAnnotations.EmailAddressAttribute();
+            bool emailValid = emailValidator.IsValid(newUser.Email);
+
+            bool isInvalid =
+                string.IsNullOrWhiteSpace(newUser.Email) || !emailValid ||
+                string.IsNullOrWhiteSpace(newUser.FirstName) ||
+                string.IsNullOrWhiteSpace(newUser.LastName) ||
+                string.IsNullOrWhiteSpace(newUser.ProfileDescription) ||
+                newUser.ImageFile == null;
+
+            if (isInvalid) // no model state because it (Identity) expects required fields we dont use
             {
+                TempData["message"] = "Please complete all of the profile fields in order to continue.";
+                TempData["messageType"] = "alert-danger";
+                if (!emailValid)
+                    TempData["message"] = "Please enter a valid email address.";
+
                 // Reload roles for dropdown in case of error
                 ViewBag.Roles = _roleManager.Roles.Select(r => new SelectListItem
                 {
@@ -175,8 +193,22 @@ namespace SocialPlatformTime.Controllers
                 return View(newUser);
             }
 
+            // Identity requires UserName → we map it to Email
+            newUser.UserName = newUser.Email;
+
+            // Save uploaded image
+            var fileName = Guid.NewGuid() + Path.GetExtension(newUser.ImageFile.FileName);
+            var filePath = Path.Combine("wwwroot/images", fileName);
+            using var stream = new FileStream(filePath, FileMode.Create);
+            await newUser.ImageFile.CopyToAsync(stream);
+            newUser.Image = "/images/" + fileName;
+
+            // Generate temp password for initial login then we enforce password change for security 
+            string tempPassword = "Temp@" + Guid.NewGuid().ToString("N")[..8];
+            newUser.MustChangePassword = true;
+            
             // If data is valid, then create Identity user
-            var result = await _userManager.CreateAsync(newUser);
+            var result = await _userManager.CreateAsync(newUser, tempPassword);
 
             if (!result.Succeeded)
             {
@@ -194,13 +226,92 @@ namespace SocialPlatformTime.Controllers
 
             // Role assignment
             if (!string.IsNullOrEmpty(selectedRole))
-            {
                 await _userManager.AddToRoleAsync(newUser, selectedRole);
-            }
 
-            TempData["message"] = "User created successfully!";
+            TempData["message"] = $"User created successfully! Temporary password: {tempPassword}";
             TempData["messageType"] = "alert-success";
             return RedirectToAction("Index");
+        }
+
+        public async Task<IActionResult> ChangePasswordFirstLogin()
+        {
+            var user = await _userManager.GetUserAsync(User);
+            if (user == null) return Challenge();
+
+            if (!user.MustChangePassword)
+                return RedirectToAction("Index", "Home");
+
+            return View();
+        }
+
+        [HttpPost]
+        public async Task<IActionResult> ResetPassword(string id)
+        {
+            var user = await _userManager.FindByIdAsync(id);
+            if (user == null) return NotFound();
+
+            string newTempPassword = "Temp@" + Guid.NewGuid().ToString("N")[..8];
+
+            var token = await _userManager.GeneratePasswordResetTokenAsync(user);
+            await _userManager.ResetPasswordAsync(user, token, newTempPassword);
+
+            user.MustChangePassword = true;
+            await _userManager.UpdateAsync(user);
+
+            TempData["message"] = $"Password reset! New temporary password: <strong>{newTempPassword}</strong>";
+            TempData["messageType"] = "alert-warning";
+
+            return RedirectToAction("Edit", new { id = user.Id });
+        }
+
+
+        [Authorize]
+        [HttpPost]
+        public async Task<IActionResult> ChangePasswordFirstLogin(string oldPassword, string newPassword)
+        {
+            var user = await _userManager.GetUserAsync(User);
+            if (user == null) return Challenge();
+
+            var result = await _userManager.ChangePasswordAsync(user, oldPassword, newPassword);
+
+            if (!result.Succeeded)
+            {
+                foreach (var e in result.Errors)
+                    ModelState.AddModelError("", e.Description);
+
+                return View();
+            }
+
+            user.MustChangePassword = false;
+            await _userManager.UpdateAsync(user);
+
+            TempData["message"] = "Password updated successfully!";
+            TempData["messageType"] = "alert-success";
+
+            return RedirectToAction("Index", "Home");
+        }
+
+        public IActionResult ChangePassword() => View();
+
+        [HttpPost]
+        public async Task<IActionResult> ChangePassword(string oldPassword, string newPassword)
+        {
+            var user = await _userManager.GetUserAsync(User);
+            if (user == null) return Challenge();
+
+            var result = await _userManager.ChangePasswordAsync(user, oldPassword, newPassword);
+
+            if (!result.Succeeded)
+            {
+                foreach (var e in result.Errors)
+                    ModelState.AddModelError("", e.Description);
+                return View();
+            }
+
+            TempData["message"] = "Password changed successfully!";
+            TempData["messageType"] = "alert-success";
+
+            return RedirectToAction("Index", "Home");
         }
 
         // Edit user (get request)
@@ -210,10 +321,12 @@ namespace SocialPlatformTime.Controllers
             if (user == null) return NotFound();
 
             ViewBag.CanChangeRole = false;
-            if (id != _userManager.GetUserId(User)) // Not Admin and not editing own profile -> invalid
-                if (!User.IsInRole("Administrator"))
-                    return Forbid();
-                else
+            bool isAdmin = User.IsInRole("Administrator");
+            bool isSelf = id == _userManager.GetUserId(User);
+
+            if (!isAdmin && !isSelf) // Not Admin and not editing own profile -> invalid operation
+                return Forbid();
+            else if (isAdmin)// Admin Workflow
                 {
                     var roles = await _roleManager.Roles.ToListAsync(); // Load roles first 
 
@@ -238,27 +351,32 @@ namespace SocialPlatformTime.Controllers
 
         // Edit user (post request)
         [HttpPost]
+        [ValidateAntiForgeryToken]
         public async Task<IActionResult> Edit(string id, ApplicationUser updatedUser, string selectedRole)
         {
             var user = await _userManager.FindByIdAsync(id);
             if (user == null) return NotFound();
-            if (id != _userManager.GetUserId(User)) return Forbid();
+            bool isAdmin = User.IsInRole("Administrator");
+            bool isSelf = id == _userManager.GetUserId(User);
+
+            if (!isAdmin && !isSelf)
+                return Forbid();
 
             ViewBag.CanChangeRole = false;
 
+            bool noPFP = updatedUser.ImageFile == null && string.IsNullOrEmpty(user.Image);
             bool isInvalid =
                 string.IsNullOrWhiteSpace(updatedUser.FirstName) ||
                 string.IsNullOrWhiteSpace(updatedUser.LastName) ||
                 string.IsNullOrWhiteSpace(updatedUser.ProfileDescription) ||
-                updatedUser.ImageFile == null;
-
+                noPFP;
 
             if (!ModelState.IsValid || isInvalid)
             {
                 TempData["message"] = "Please complete all of the profile fields in order to continue.";
                 TempData["messageType"] = "alert-danger";
 
-                if (User.IsInRole("Administrator"))
+                if (isAdmin)
                 {
                     var roles = await _roleManager.Roles.ToListAsync(); // Load roles first 
 
@@ -281,7 +399,8 @@ namespace SocialPlatformTime.Controllers
             }
 
             // Update user details
-            user.Email = updatedUser.Email;
+            await _userManager.SetEmailAsync(user, updatedUser.Email);
+            //user.Email = updatedUser.Email;
             user.FirstName = updatedUser.FirstName;
             user.LastName = updatedUser.LastName;
             user.ProfileDescription = updatedUser.ProfileDescription;
@@ -320,6 +439,7 @@ namespace SocialPlatformTime.Controllers
         }
 
         // Delete user (post request)
+        [ValidateAntiForgeryToken]
         [Authorize(Roles = "Administrator")]
         [HttpPost]
         public async Task<IActionResult> Delete(string id)
@@ -340,6 +460,9 @@ namespace SocialPlatformTime.Controllers
         [AllowAnonymous]
         public IActionResult Search(string query)
         {
+            if (string.IsNullOrWhiteSpace(query))
+                return View(new List<ApplicationUser>());
+
             var users = _db.Users
                 .Where(u =>
                     u.FirstName.Contains(query) ||
@@ -378,7 +501,7 @@ namespace SocialPlatformTime.Controllers
                 string.IsNullOrWhiteSpace(model.ProfileDescription) ||
                 model.ImageFile == null;
 
-            if (isInvalid)
+            if (!ModelState.IsValid || isInvalid)
             {
                 TempData["message"] = "Please complete all of the profile fields in order to continue.";
                 TempData["messageType"] = "alert-danger";
@@ -423,6 +546,9 @@ namespace SocialPlatformTime.Controllers
             {
                 return NotFound();
             }
+
+            if (User.IsInRole("Administrator") || await _userManager.IsInRoleAsync(targetUser, "Administrator")) // ADmins cannot participate in follow flow 
+                return Forbid(); // we enfore this again (extra extra sure) 
 
             var existing = _db.FollowRequests
                 .FirstOrDefault(fr => fr.FollowerId == currUserId && fr.FollowingId == id);
@@ -511,6 +637,9 @@ namespace SocialPlatformTime.Controllers
 
             if (request == null)
                 return NotFound();
+
+            if (decision != "accept" && decision != "reject") 
+                return BadRequest();
 
             // Doar utilizatorul care PRIMEȘTE cererea poate decide
             if (request.FollowingId != currUserId)

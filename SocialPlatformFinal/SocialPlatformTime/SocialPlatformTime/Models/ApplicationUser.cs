@@ -32,13 +32,7 @@ namespace SocialPlatformTime.Models
         public IFormFile? ImageFile { get; set; }
 
         public bool IsPublic { get; set; } = true; // by default, all profiles start as public
-
-        // To enforce all required fields after having registered using Identity Framework
-        //public bool IsProfileComplete =>
-        //    !string.IsNullOrWhiteSpace(FirstName) &&
-        //    !string.IsNullOrWhiteSpace(LastName) &&
-        //    !string.IsNullOrWhiteSpace(ProfileDescription) &&
-        //    !string.IsNullOrWhiteSpace(Image);
+        public bool MustChangePassword { get; set; } = false; // necessary if the user has been created by an admin to enforce security
         public bool IsProfileComplete =>
             !string.IsNullOrWhiteSpace(FirstName) &&
             !string.IsNullOrWhiteSpace(LastName) &&
