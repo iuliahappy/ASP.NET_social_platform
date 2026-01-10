@@ -3,7 +3,7 @@
     "mssql1": {
       "type": "mssql",
 
-      "connectionId": "ConnectionStrings:Cm"
+      "connectionId": "ConnectionStrings:DefaultConnection"
 
     }
   }
