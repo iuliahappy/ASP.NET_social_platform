@@ -35,7 +35,6 @@ namespace SocialPlatformTime.Controllers
 
             var currentUserId = _userManager.GetUserId(User);
 
-            // Update LastEntry
             var userEntry = _db.UserConversations
                                .FirstOrDefault(uc => uc.ConversationId == id && uc.ApplicationUserId == currentUserId);
 
@@ -59,7 +58,6 @@ namespace SocialPlatformTime.Controllers
                     gr.RoleName == "Owner");
             }
 
-            // Extract the messages of the conversation
             var messages = _db.Messages
                                 .Include(m => m.ApplicationUser)
                                 .Where(m => m.ConversationId == id)
@@ -67,7 +65,6 @@ namespace SocialPlatformTime.Controllers
                                 .OrderBy(m => m.dateTime)
                                 .ToList();
 
-            // Update the "seen"
             var otherUsersLastEntries = _db.UserConversations
                                             .Where(uc => uc.ConversationId == id && uc.ApplicationUserId != currentUserId)
                                             .Select(uc => uc.LastEntry)

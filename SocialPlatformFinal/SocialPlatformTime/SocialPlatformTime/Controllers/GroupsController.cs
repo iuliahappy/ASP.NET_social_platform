@@ -78,21 +78,19 @@ namespace SocialPlatformTime.Controllers
         public IActionResult Index(string search, int page = 1)
         {
             var currentUserId = _userManager.GetUserId(User);
-            int pageSize = 5; // Paginare: 5 grupuri pe pagină
+            int pageSize = 5;
 
             var groupsQuery = _db.Groups
                 .Include(g => g.RoleTables)
                     .ThenInclude(rt => rt.ApplicationUser)
                 .Where(g => !g.RoleTables.Any(r => r.ApplicationUserId == currentUserId));
 
-            // Căutare după denumire și descriere
             if (!string.IsNullOrEmpty(search))
             {
                 groupsQuery = groupsQuery.Where(g => g.Name.Contains(search)
                                                 || (g.Description != null && g.Description.Contains(search)));
             }
 
-            // Calculăm datele pentru paginare
             int totalItems = groupsQuery.Count();
             var groupsPaginated = groupsQuery
                 .OrderBy(g => g.Name)
@@ -362,11 +360,10 @@ namespace SocialPlatformTime.Controllers
 
         [Authorize(Roles = "Registered_User,Administrator")]
         [HttpPost]
-        public IActionResult Leave(int id) // id este GroupId
+        public IActionResult Leave(int id)
         {
             var currentUserId = _userManager.GetUserId(User);
 
-            // 1. Găsim grupul pentru a identifica conversația asociată
             var group = _db.Groups
                            .Include(g => g.Conversation)
                            .FirstOrDefault(g => g.Id == id);
@@ -389,7 +386,6 @@ namespace SocialPlatformTime.Controllers
                 return DeleteInternal(group.Id);
             }
 
-            // 2. Ștergem rolul utilizatorului din acest grup
             var userRole = _db.GroupRoles
                               .FirstOrDefault(gr => gr.GroupId == id && gr.ApplicationUserId == currentUserId);
 
@@ -398,7 +394,6 @@ namespace SocialPlatformTime.Controllers
                 _db.GroupRoles.Remove(userRole);
             }
 
-            // 3. Ștergem accesul utilizatorului la conversația grupului
             if (group.Conversation != null)
             {
                 var userConv = _db.UserConversations
