@@ -62,16 +62,49 @@ namespace SocialPlatformTime.Controllers
         //    return RedirectToAction("Show", "Conversations", new { id = groupConversation.Id });
         //}
 
+        //[Authorize(Roles = "Registered_User,Administrator")]
+        //public IActionResult Index()
+        //{
+        //    var currentUserId = _userManager.GetUserId(User);
+
+        //    var groupsNotJoined = _db.Groups
+        //        .Where(g => !g.RoleTables.Any(r => r.ApplicationUserId == currentUserId))
+        //        .ToList();
+
+        //    return View(groupsNotJoined);
+        //}
+
         [Authorize(Roles = "Registered_User,Administrator")]
-        public IActionResult Index()
+        public IActionResult Index(string search, int page = 1)
         {
             var currentUserId = _userManager.GetUserId(User);
+            int pageSize = 5; // Paginare: 5 grupuri pe pagină
 
-            var groupsNotJoined = _db.Groups
-                .Where(g => !g.RoleTables.Any(r => r.ApplicationUserId == currentUserId))
+            var groupsQuery = _db.Groups
+                .Include(g => g.RoleTables)
+                    .ThenInclude(rt => rt.ApplicationUser)
+                .Where(g => !g.RoleTables.Any(r => r.ApplicationUserId == currentUserId));
+
+            // Căutare după denumire și descriere
+            if (!string.IsNullOrEmpty(search))
+            {
+                groupsQuery = groupsQuery.Where(g => g.Name.Contains(search)
+                                                || (g.Description != null && g.Description.Contains(search)));
+            }
+
+            // Calculăm datele pentru paginare
+            int totalItems = groupsQuery.Count();
+            var groupsPaginated = groupsQuery
+                .OrderBy(g => g.Name)
+                .Skip((page - 1) * pageSize)
+                .Take(pageSize)
                 .ToList();
 
-            return View(groupsNotJoined);
+            ViewBag.Search = search;
+            ViewBag.CurrentPage = page;
+            ViewBag.TotalPages = (int)Math.Ceiling((double)totalItems / pageSize);
+
+            return View(groupsPaginated);
         }
 
         [Authorize(Roles = "Registered_User,Administrator")]
