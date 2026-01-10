@@ -12,8 +12,8 @@ using SocialPlatformTime.Data;
 namespace SocialPlatformTime.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    [Migration("20260110164328_hguy")]
-    partial class hguy
+    [Migration("20260110164846_Halo")]
+    partial class Halo
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -198,6 +198,9 @@ namespace SocialPlatformTime.Migrations
 
                     b.Property<DateTimeOffset?>("LockoutEnd")
                         .HasColumnType("datetimeoffset");
+
+                    b.Property<bool>("MustChangePassword")
+                        .HasColumnType("bit");
 
                     b.Property<string>("NormalizedEmail")
                         .HasMaxLength(256)
