@@ -34,26 +34,24 @@ namespace Social_Platform.Controllers
                 .AsQueryable();
 
             // Retrieve posts from those users w private profiles that have accepted the current user's fr (only if it's not an admin user)
-            if (User.Identity?.IsAuthenticated == true && !isAdmin)
+            if (!isAdmin)
             {
-                // retrieve list of follow reqs which have been accepted
                 List<string> acceptedFollowIds = new List<string>();
-                acceptedFollowIds = _db.FollowRequests
-                    .Where(fr => fr.FollowerId == currentUserId && fr.Status == "accepted")
-                    .Select(fr => fr.FollowingId)
-                    .ToList();
 
-                var savedPostIds = _db.SavedPosts
-                    .Where(sp => sp.ApplicationUserId == currentUserId)
-                    .Select(sp => sp.PostId)
-                    .ToList();
-                ViewBag.SavedPostIds = savedPostIds;
+                if (User.Identity?.IsAuthenticated == true)
+                    // retrieve list of follow reqs which have been accepted
+                    acceptedFollowIds = _db.FollowRequests
+                        .Where(fr => fr.FollowerId == currentUserId && fr.Status == "accepted")
+                        .Select(fr => fr.FollowingId)
+                        .ToList();
 
+                // additional filter where we get posts made by public users, those which have accepted follow rq, or curr user id (if even logged in)
                 postsQuery = postsQuery
                     .Where(p => p.ApplicationUser.IsPublic
                              || p.ApplicationUserId == currentUserId
                              || acceptedFollowIds.Contains(p.ApplicationUserId));
             }
+            // actual db query execution
             var posts = postsQuery
                 .OrderByDescending(p => p.Date)
                 .ToList();
@@ -104,7 +102,31 @@ namespace Social_Platform.Controllers
             }
 
             SetAccessRights();
+            
+            var currentUserId = _userManager.GetUserId(User);
+            bool isAdmin = User.IsInRole("Administrator");
 
+            if (!isAdmin)
+            {
+                bool isOwner = post.ApplicationUserId == currentUserId;
+
+                bool isFollower = false;
+                if (currentUserId != null)
+                {
+                    isFollower = _db.FollowRequests.Any(fr =>
+                        fr.FollowerId == currentUserId &&
+                        fr.FollowingId == post.ApplicationUserId &&
+                        fr.Status == "accepted");
+                }
+
+                bool canView =
+                    post.ApplicationUser.IsPublic ||
+                    isOwner ||
+                    isFollower;
+
+                if (!canView)
+                    return Forbid();   // or return NotFound() if you prefer hiding existence
+            }
             //// Verifică dacă utilizatorul curent a salvat această postare
             //if (User.Identity?.IsAuthenticated == true)
             //{
@@ -117,7 +139,6 @@ namespace Social_Platform.Controllers
             // Setează SavedPostIds pentru utilizatorul curent
             if (User.Identity?.IsAuthenticated == true)
             {
-                var currentUserId = _userManager.GetUserId(User);
                 var savedPostIds = _db.SavedPosts
                     .Where(sp => sp.ApplicationUserId == currentUserId)
                     .Select(sp => sp.PostId)

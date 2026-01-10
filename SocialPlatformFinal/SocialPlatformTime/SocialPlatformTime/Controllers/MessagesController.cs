@@ -63,7 +63,7 @@ namespace SocialPlatformTime.Controllers
         public IActionResult Delete(int id)
         {
             var currentUserId = _userManager.GetUserId(User);
-
+            bool isAdmin = User.IsInRole("Administrator");
             var message = _db.Messages.FirstOrDefault(m => m.Id == id);
 
             if (message == null)
@@ -71,7 +71,7 @@ namespace SocialPlatformTime.Controllers
                 return NotFound();
             }
 
-            if (message.ApplicationUserId != currentUserId)
+            if (message.ApplicationUserId != currentUserId && !isAdmin)
             {
                 return Forbid();
             }
