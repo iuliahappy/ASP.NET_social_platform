@@ -2,6 +2,15 @@
 
 @* Afisarea unei postari*@
 
+
+@if (TempData["message"] != null)
+{
+    <div class="alert @TempData["messageType"]">
+        @TempData["message"]
+    </div>
+}
+
+
 <br />
 
 <div class="card">

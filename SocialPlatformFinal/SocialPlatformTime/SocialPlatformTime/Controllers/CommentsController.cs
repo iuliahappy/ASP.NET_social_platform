@@ -39,6 +39,7 @@ namespace Social_Platform.Controllers
         //// Add a comm for an asociated post
         //nou
         [HttpPost]
+        [Authorize(Roles = "Registered_User,Administrator")]
         public async Task<IActionResult> New(Comment comm)
         {
             comm.Date = DateTime.Now;
@@ -171,7 +172,6 @@ namespace Social_Platform.Controllers
             }
 
         }
-
 
         // Delete a comm from a post
         // Se poate sterge comentariul doar de catre utilizatorul care a postat comentariul respectiv sau de catre administrator

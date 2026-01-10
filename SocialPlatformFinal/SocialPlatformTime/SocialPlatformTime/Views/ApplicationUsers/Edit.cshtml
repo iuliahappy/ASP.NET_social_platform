@@ -35,9 +35,6 @@
         <option value="true">Public</option>
         <option value="false">Private</option>
     </select>
-    <form asp-action="ResetPassword" asp-route-id="@Model.Id" method="post">
-        <button class="btn btn-danger mt-2">Reset Password</button>
-    </form>
 
     @if (canChangeRole)
     { 
@@ -55,5 +52,8 @@
         <input type="hidden" name="selectedRole" value="@currentRole" />
     }
    <br />
-    <button type="submit" class="btn btn-success">Update User</button>
+    <button type="submit" class="btn btn-success">Save Changes</button>
+</form>
+<form asp-action="ResetPassword" asp-route-id="@Model.Id" method="post">
+    <button class="btn btn-danger mt-2">Reset Password</button>
 </form>

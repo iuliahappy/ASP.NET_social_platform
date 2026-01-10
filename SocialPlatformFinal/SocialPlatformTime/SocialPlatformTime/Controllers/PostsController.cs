@@ -25,18 +25,46 @@ namespace Social_Platform.Controllers
         [AllowAnonymous]
         public IActionResult Index()
         {
-            var posts = _db.Posts
-                           .Include(p => p.ApplicationUser)
-                           .Include(p => p.Reactions)
-                           .OrderByDescending(p => p.Date);
+            var currentUserId = _userManager.GetUserId(User);
+            bool isAdmin = User.IsInRole("Administrator");
+
+            IQueryable<Post> postsQuery = _db.Posts
+                .Include(p => p.ApplicationUser)
+                .Include(p => p.Reactions)
+                .AsQueryable();
+
+            // Retrieve posts from those users w private profiles that have accepted the current user's fr (only if it's not an admin user)
+            if (User.Identity?.IsAuthenticated == true && !isAdmin)
+            {
+                // retrieve list of follow reqs which have been accepted
+                List<string> acceptedFollowIds = new List<string>();
+                acceptedFollowIds = _db.FollowRequests
+                    .Where(fr => fr.FollowerId == currentUserId && fr.Status == "accepted")
+                    .Select(fr => fr.FollowingId)
+                    .ToList();
+
+                var savedPostIds = _db.SavedPosts
+                    .Where(sp => sp.ApplicationUserId == currentUserId)
+                    .Select(sp => sp.PostId)
+                    .ToList();
+                ViewBag.SavedPostIds = savedPostIds;
+
+                postsQuery = postsQuery
+                    .Where(p => p.ApplicationUser.IsPublic
+                             || p.ApplicationUserId == currentUserId
+                             || acceptedFollowIds.Contains(p.ApplicationUserId));
+            }
+            var posts = postsQuery
+                .OrderByDescending(p => p.Date)
+                .ToList();
 
             // ViewBag.OriceDenumireSugestiva
             ViewBag.Posts = posts;
 
-            // Obține lista de postări salvate pentru utilizatorul curent
-            if (User.Identity?.IsAuthenticated == true)
-            {
-                var currentUserId = _userManager.GetUserId(User);
+
+            // Obține lista de postari vizibile pentru utilizatorul curent
+            if (User.Identity?.IsAuthenticated == true && !isAdmin)
+            {             
                 var savedPostIds = _db.SavedPosts
                     .Where(sp => sp.ApplicationUserId == currentUserId)
                     .Select(sp => sp.PostId)
@@ -56,7 +84,6 @@ namespace Social_Platform.Controllers
 
             return View();
         }
-
 
 
         // Se afiseaza o singura postare in functie de id-ul ei
@@ -104,8 +131,6 @@ namespace Social_Platform.Controllers
 
             return View(post);
         }
-
-
 
         // Afiseaza formularul pentru adaugarea unei noi postari
         // [HttpGet] care se executa implicit
@@ -331,7 +356,7 @@ namespace Social_Platform.Controllers
         // add a comment = write operation => we use HttpPost
         //nou
         [HttpPost]
-        [Authorize(Roles = "Registered_User")]
+        [Authorize(Roles = "Registered_User,Administrator")]
         public async Task<IActionResult> Show([FromForm] Comment comm)
         {
             comm.Date = DateTime.Now;

@@ -160,7 +160,6 @@ namespace SocialPlatformTime.Controllers
             return View();
         }
 
-        [ValidateAntiForgeryToken]
         [Authorize(Roles = "Administrator")]
         // Create User (post request)
         [HttpPost]
@@ -206,7 +205,7 @@ namespace SocialPlatformTime.Controllers
             // Generate temp password for initial login then we enforce password change for security 
             string tempPassword = "Temp@" + Guid.NewGuid().ToString("N")[..8];
             newUser.MustChangePassword = true;
-            
+
             // If data is valid, then create Identity user
             var result = await _userManager.CreateAsync(newUser, tempPassword);
 
@@ -351,19 +350,21 @@ namespace SocialPlatformTime.Controllers
 
         // Edit user (post request)
         [HttpPost]
-        [ValidateAntiForgeryToken]
         public async Task<IActionResult> Edit(string id, ApplicationUser updatedUser, string selectedRole)
         {
+            //Console.WriteLine("MEOW");
             var user = await _userManager.FindByIdAsync(id);
             if (user == null) return NotFound();
+
             bool isAdmin = User.IsInRole("Administrator");
-            bool isSelf = id == _userManager.GetUserId(User);
+            bool isSelf = (id == _userManager.GetUserId(User));
 
             if (!isAdmin && !isSelf)
                 return Forbid();
 
             ViewBag.CanChangeRole = false;
 
+            // all required fields are filled 
             bool noPFP = updatedUser.ImageFile == null && string.IsNullOrEmpty(user.Image);
             bool isInvalid =
                 string.IsNullOrWhiteSpace(updatedUser.FirstName) ||
@@ -398,13 +399,19 @@ namespace SocialPlatformTime.Controllers
                 return View(updatedUser);
             }
 
-            // Update user details
-            await _userManager.SetEmailAsync(user, updatedUser.Email);
-            //user.Email = updatedUser.Email;
+            // Update basic user details
             user.FirstName = updatedUser.FirstName;
             user.LastName = updatedUser.LastName;
             user.ProfileDescription = updatedUser.ProfileDescription;
-
+            user.IsPublic = updatedUser.IsPublic;
+            
+            // Update email and (identity) username
+            if (user.Email != updatedUser.Email)
+            {
+                await _userManager.SetEmailAsync(user, updatedUser.Email);
+                user.UserName = updatedUser.Email;
+            }
+            // Update pfp 
             if (updatedUser.ImageFile != null)
             {
 
@@ -419,7 +426,14 @@ namespace SocialPlatformTime.Controllers
                 user.Image = "/images/" + fileName;
             }
 
-            await _userManager.UpdateAsync(user);
+            // Update user in Identity
+            var result = await _userManager.UpdateAsync(user);
+            if (!result.Succeeded)
+            {
+                foreach (var e in result.Errors)
+                    ModelState.AddModelError("", e.Description);
+                return View(updatedUser);
+            }
 
             // Update role if admin
             if (User.IsInRole("Administrator"))
@@ -439,7 +453,6 @@ namespace SocialPlatformTime.Controllers
         }
 
         // Delete user (post request)
-        [ValidateAntiForgeryToken]
         [Authorize(Roles = "Administrator")]
         [HttpPost]
         public async Task<IActionResult> Delete(string id)
@@ -511,6 +524,8 @@ namespace SocialPlatformTime.Controllers
             user.FirstName = model.FirstName;
             user.LastName = model.LastName;
             user.ProfileDescription = model.ProfileDescription;
+            user.IsPublic = model.IsPublic;
+
             if (model.ImageFile != null)
             {
                 var fileName = Guid.NewGuid() + Path.GetExtension(model.ImageFile.FileName);
