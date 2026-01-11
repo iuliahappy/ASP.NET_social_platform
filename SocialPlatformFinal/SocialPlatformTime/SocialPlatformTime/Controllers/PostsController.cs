@@ -203,7 +203,7 @@ namespace Social_Platform.Controllers
                     else if (!moderationResult.IsAppropriate)
                     {
                         // Conținutul este neadecvat - blocăm publicarea
-                        ModelState.AddModelError("", "Your content contains inappropriate language. Please revise!");
+                        ModelState.AddModelError("", "Your content contains inappropriate terms. Please revise!");
                         return View(post);
                     }
                 }
@@ -398,7 +398,7 @@ namespace Social_Platform.Controllers
                     else if (!moderationResult.IsAppropriate)
                     {
                         // Comentariul este neadecvat - blocăm publicarea
-                        ModelState.AddModelError("CommentBody", "Your content contains inappropriate language. Please revise!");
+                        ModelState.AddModelError("CommentBody", "Your content contains inappropriate terms. Please revise!");
 
                         // Reîncărcăm postarea pentru a afișa eroarea
                         Post? post = _db.Posts
