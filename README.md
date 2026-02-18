@@ -1,7 +1,7 @@
 # ASP.NET_social_platform
 
 # English:
-Social Platform is a web application developed in ASP.NET Core MVC and C#, using Entity Framework Core for data persistence and ASP.NET Identity for authentication and role management. The project simulates the core features of a modern social network, including public and private profiles, an unidirectional follow system and discussion groups. Additionally, the platform integrates an AI companion for the automatic moderation of inappropriate content.
+Social Platform is a web application developed in ASP.NET Core MVC and C#, using Entity Framework Core for data persistence and ASP.NET Identity for authentication and role management. The project simulates the core features of a modern social network, including public and private profiles, a unidirectional follow system and discussion groups. Additionally, the platform integrates an AI companion for the automatic moderation of inappropriate content.
 
 ### User Management and Profiles
  * **User types:** the platform supports three distinct roles - unregistered visitor, registered user, and administrator.
