@@ -51,6 +51,10 @@ Social Platform is a web application developed in ASP.NET Core MVC and C#, using
  * **Control:** The administrator has moderation rights over the platform.
  * **Content cleaning:** Can delete any element considered inappropriate, including comments, messages, users, or entire groups, but cannot edit their content.
 
+### The team that developed this project:
+ * **Bâcă Ionuț Adelin
+ * **Popescu Iulia Maria
+ * **Trifan Antonia Mirabella
       
 # Română:
 Social Platform este o aplicație web dezvoltată în ASP.NET Core MVC și C#, utilizând Entity Framework Core pentru persistența datelor și ASP.NET Identity pentru gestionarea autentificării și a rolurilor. Proiectul simulează funcționalitățile de bază ale unei rețele de socializare moderne, incluzând profiluri publice și private, un sistem de urmărire (follow) unidirecțional și grupuri de discuții. De asemenea, platforma integrează un companion AI pentru moderarea automată a conținutului neadecvat.
@@ -102,4 +106,9 @@ Social Platform este o aplicație web dezvoltată în ASP.NET Core MVC și C#, u
 ### Administrare
  * **Control:** administratorul are drepturi de moderare asupra platformei.
  * **Curățare conținut:** poate șterge orice element considerat neadecvat, inclusiv comentarii, mesaje, utilizatori sau grupuri întregi, dar nu poate edita conținutul acestora.
+
+### Echipa care a dezvoltat acest proiect:
+ * **Bâcă Ionuț Adelin
+ * **Popescu Iulia Maria
+ * **Trifan Antonia Mirabella
 
